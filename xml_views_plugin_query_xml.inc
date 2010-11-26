@@ -26,11 +26,15 @@ class xml_views_plugin_query_xml extends views_plugin_query {
    */
   function query($view, $get_count = FALSE) {
     $row_xpath = $this->options['row_xpath'];
-    $filters = array();
-    foreach ($this->filter as $filter) {
-      $filters[] = $filter['xpath_selector'] . $filter['operator'] . $filter['value'];
+    $filter_string = '';
+    if (!empty($this->filter)) {
+      $filters = array();
+      foreach ($this->filter as $filter) {
+        $filters[] = $filter['xpath_selector'] . $filter['operator'] . $filter['value'];
+      }
+      $filter_string =  '[' . implode(' and ', $filters) . ']';
     }
-    return $row_xpath . '[' . implode(' and ', $filters) . ']';
+    return $row_xpath . ($filter_string ? $filter_string);
   }
 
   function add_param($param, $value = '') {
