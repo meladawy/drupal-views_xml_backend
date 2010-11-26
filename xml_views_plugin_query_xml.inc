@@ -34,7 +34,7 @@ class xml_views_plugin_query_xml extends views_plugin_query {
       }
       $filter_string =  '[' . implode(' and ', $filters) . ']';
     }
-    return $row_xpath . ($filter_string ? $filter_string);
+    return $row_xpath . ($filter_string ? $filter_string : '');
   }
 
   function add_param($param, $value = '') {
