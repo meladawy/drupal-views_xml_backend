@@ -1,0 +1,12 @@
+<?php
+// $Id$
+
+/**
+ * Implementation of hook_views_api().
+ */
+function xml_views_views_api() {
+  return array(
+    'api' => 3,
+    'path' => drupal_get_path('module', 'xml_views'),
+  );
+}
