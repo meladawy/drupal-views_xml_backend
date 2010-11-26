@@ -3,7 +3,7 @@
 
 class xml_views_handler_field extends views_handler_field {
   function render($values) {
-    return $values[$this->field_alias];
+    return check_plain($values[$this->field_alias]);
   }
 
   function element_type() {
