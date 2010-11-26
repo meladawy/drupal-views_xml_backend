@@ -31,27 +31,6 @@ class xml_views_handler_filter extends views_handler_filter {
         'short' => t('!='),
         'values' => 1,
       ),
-      'contains' => array(
-        'title' => t('Contains'),
-        'short' => t('contains'),
-        'values' => 1,
-      ),
-      'not' => array(
-        'title' => t('Does not contain'),
-        'short' => t('!has'),
-        'values' => 1,
-      ),
-      'empty' => array(
-        'title' => t('Is empty (NULL)'),
-        'method' => 'op_empty',
-        'short' => t('empty'),
-        'values' => 0,
-      ),
-      'not empty' => array(
-        'title' => t('Is not empty (NOT NULL)'),
-        'short' => t('not empty'),
-        'values' => 0,
-      ),
     );
   }
 

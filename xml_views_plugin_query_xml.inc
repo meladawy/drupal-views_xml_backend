@@ -25,7 +25,12 @@ class xml_views_plugin_query_xml extends views_plugin_query {
    *   Provide a countquery if this is true, otherwise provide a normal query.
    */
   function query($view, $get_count = FALSE) {
-    return '';
+    $row_xpath = $this->options['row_xpath'];
+    $filters = array();
+    foreach ($this->filter as $filter) {
+      $filters[] = $filter['xpath_selector'] . $filter['operator'] . $filter['value'];
+    }
+    return $row_xpath . '[' . implode(' and ', $filters) . ']';
   }
 
   function add_param($param, $value = '') {
@@ -36,7 +41,7 @@ class xml_views_plugin_query_xml extends views_plugin_query {
    * Builds the necessary info to execute the query.
    */
   function build(&$view) {
-    $view->build_info['query'] = '';
+    $view->build_info['query'] = $this->query($view);
     $view->build_info['count_query'] = '';
     $view->build_info['query_args'] = array();
   }
@@ -45,52 +50,30 @@ class xml_views_plugin_query_xml extends views_plugin_query {
     $start = views_microtime();
 
     $file = simplexml_load_file($this->options['xml_file']);
-    $rows = $file->xpath($this->options['row_xpath']);
+    $rows = $file->xpath($view->build_info['query']);
     $result = array();
+
     foreach ($rows as $row) {
       $item = array();
-      foreach ($this->filter as $filter) {
-        $xpath = $row->xpath($filter['xpath_selector']);
-        $value = (string)$xpath[0];
-        switch ($filter['operator']) {
-          case '=':
-            $match = ($value == $filter['value']);
-            break;
-          case '!=':
-            $match = ($value != $filter['value']);
-            break;
-          case 'contains':
-            $match = (strpos($value, $filter['value']) !== FALSE);
-            break;
-          case 'not':
-            $match = (strpos($value, $filter['value']) === FALSE);
-            break;
-          case 'empty':
-            $match = empty($value);
-            break;
-          case 'not empty':
-            $match = !empty($value);
-            break;
-        }
-        if (!$match) {
-          continue 2;
-        }
-      }
       foreach ($this->fields as $field) {
         $xpath = $row->xpath($field['field']);
         $item[$field['field']] = (string)$xpath[0];
       }
-      foreach ($this->orderby as $orderby) {
-        $xpath = $row->xpath($orderby['field']);
-        $item[$orderby['field']] = (string)$xpath[0];
+      if (!empty($this->orderby)) {
+        foreach ($this->orderby as $orderby) {
+          $xpath = $row->xpath($orderby['field']);
+          $item[$orderby['field']] = (string)$xpath[0];
+        }
       }
       $result[] = $item;
     }
-    // Array reverse, because the most specific are first - PHP works the
-    // opposite way of SQL.
-    foreach (array_reverse($this->orderby) as $orderby) {
-      _xml_views_sort_field($orderby['field'], $orderby['order']);
-      uasort($result, '_xml_views_sort');
+    if (!empty($this->orderby)) {
+      // Array reverse, because the most specific are first - PHP works the
+      // opposite way of SQL.
+      foreach (array_reverse($this->orderby) as $orderby) {
+        _xml_views_sort_field($orderby['field'], $orderby['order']);
+        uasort($result, '_xml_views_sort');
+      }
     }
     $view->result = $result;
     $view->total_rows = count($result);
