@@ -6,7 +6,7 @@ class xml_views_plugin_query_xml extends views_plugin_query {
   /**
    * Constructor; Create the basic query object and fill with default values.
    */
-  function init($base_table = '', $base_field, $options) {
+  function init($base_table = '', $base_field, $options = array()) {
     parent::init($base_table, $base_field, $options);
 
     $this->xml_file = $this->options['xml_file'];
