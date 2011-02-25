@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 class xml_views_handler_filter extends views_handler_filter {
   // exposed filter options

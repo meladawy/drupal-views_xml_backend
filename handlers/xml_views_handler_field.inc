@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 class xml_views_handler_field extends views_handler_field {
   function render($values) {

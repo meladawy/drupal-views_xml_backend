@@ -1,5 +1,4 @@
 <?php
-// $Id$
 class yql_views_query_handler_argument_column extends yql_views_query_handler_argument {
   function init(&$view, $options) {
     parent::init($view, $options);

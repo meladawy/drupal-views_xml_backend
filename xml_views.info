@@ -1,4 +1,3 @@
-; $Id$
 name = XML Views
 description = Adds a views backend to query XML files.
 package = Views

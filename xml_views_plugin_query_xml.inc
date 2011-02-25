@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 class xml_views_plugin_query_xml extends views_plugin_query {
 
