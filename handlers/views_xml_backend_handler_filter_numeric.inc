@@ -1,6 +1,6 @@
 <?php
 
-class xml_views_handler_filter_numeric extends views_handler_filter_numeric {
+class views_xml_backend_handler_filter_numeric extends views_handler_filter_numeric {
   // exposed filter options
   var $no_single = TRUE;
 

@@ -10,24 +10,24 @@ function xml_views_views_data() {
   $data['xml']['table']['base'] = array(
     'title' => t('XML'),
     'help' => t('Queries an XML file.'),
-    'query class' => 'xml_views',
+    'query class' => 'views_xml_backend',
   );
 
   $data['xml']['text'] = array(
     'title' => t('Text'),
     'help' => t('Text in the XML file.'),
     'field' => array(
-      'handler' => 'xml_views_handler_field',
+      'handler' => 'views_xml_backend_handler_field',
       'element type' => 'div',
     ),
     'filter' => array(
-      'handler' => 'xml_views_handler_filter',
+      'handler' => 'views_xml_backend_handler_filter',
     ),
     'sort' => array(
-      'handler' => 'xml_views_handler_sort',
+      'handler' => 'views_xml_backend_handler_sort',
     ),
     'argument' => array(
-      'handler' => 'xml_views_handler_argument_column',
+      'handler' => 'views_xml_backend_handler_argument',
     ),
   );
 
@@ -35,17 +35,17 @@ function xml_views_views_data() {
     'title' => t('Numeric'),
     'help' => t('A number in the XML file.'),
     'field' => array(
-      'handler' => 'xml_views_handler_field_numeric',
+      'handler' => 'views_xml_backend_handler_field_numeric',
       'element type' => 'div',
     ),
     'filter' => array(
-      'handler' => 'xml_views_handler_filter_numeric',
+      'handler' => 'views_xml_backend_handler_filter_numeric',
     ),
     'sort' => array(
-      'handler' => 'xml_views_handler_sort',
+      'handler' => 'views_xml_backend_handler_sort',
     ),
     'argument' => array(
-      'handler' => 'xml_views_handler_argument_column',
+      'handler' => 'views_xml_backend_handler_argument',
     ),
   );
 
@@ -58,10 +58,10 @@ function xml_views_views_data() {
 function xml_views_views_plugins() {
   return array(
     'query' => array(
-      'xml_views' => array(
+      'views_xml_backend' => array(
         'title' => t('XML'),
         'help' => t('Reads from an XML file.'),
-        'handler' => 'xml_views_plugin_query_xml',
+        'handler' => 'views_xml_backend_plugin_query_xml.inc',
       ),
     ),
   );

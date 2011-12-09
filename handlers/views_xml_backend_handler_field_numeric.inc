@@ -1,6 +1,6 @@
 <?php
 
-class xml_views_handler_field_numeric extends xml_views_handler_field {
+class views_xml_backend_handler_field_numeric extends views_xml_backend_handler_field {
   function render($values) {
     return check_plain(trim($values[$this->field_alias]));
   }

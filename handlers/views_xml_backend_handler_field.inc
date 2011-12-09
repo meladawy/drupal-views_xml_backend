@@ -1,6 +1,6 @@
 <?php
 
-class xml_views_handler_field extends views_handler_field {
+class views_xml_backend_handler_field extends views_handler_field {
   function render($values) {
     return check_plain($values[$this->field_alias]);
   }

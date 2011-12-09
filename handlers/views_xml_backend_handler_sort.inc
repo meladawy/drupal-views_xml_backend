@@ -1,6 +1,6 @@
 <?php
 
-class xml_views_handler_sort extends views_handler_sort {
+class views_xml_backend_handler_sort extends views_handler_sort {
   function option_definition() {
     $options = parent::option_definition();
     $options['xpath_selector'] = array('default' => '');
