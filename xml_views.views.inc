@@ -13,14 +13,33 @@ function xml_views_views_data() {
     'query class' => 'xml_views',
   );
 
-  $data['xml']['column'] = array(
-    'title' => t('Column'),
-    'help' => t('An column in the XML file.'),
+  $data['xml']['text'] = array(
+    'title' => t('Text'),
+    'help' => t('Text in the XML file.'),
     'field' => array(
       'handler' => 'xml_views_handler_field',
+      'element type' => 'div',
     ),
     'filter' => array(
       'handler' => 'xml_views_handler_filter',
+    ),
+    'sort' => array(
+      'handler' => 'xml_views_handler_sort',
+    ),
+    'argument' => array(
+      'handler' => 'xml_views_handler_argument_column',
+    ),
+  );
+
+  $data['xml']['numeric'] = array(
+    'title' => t('Numeric'),
+    'help' => t('A number in the XML file.'),
+    'field' => array(
+      'handler' => 'xml_views_handler_field_numeric',
+      'element type' => 'div',
+    ),
+    'filter' => array(
+      'handler' => 'xml_views_handler_filter_numeric',
     ),
     'sort' => array(
       'handler' => 'xml_views_handler_sort',
@@ -34,39 +53,7 @@ function xml_views_views_data() {
 }
 
 /**
- * Implementation of hook_views_handlers().
- */
-function xml_views_views_handlers() {
-  return array(
-    'info' => array(
-      'path' => drupal_get_path('module', 'xml_views') . '/handlers',
-    ),
-    'handlers' => array(
-      // Fields
-      'xml_views_handler_field' => array(
-        'parent' => 'views_handler_field',
-      ),
-
-      // Filters
-      'xml_views_handler_filter' => array(
-        'parent' => 'views_handler_filter',
-      ),
-
-      // Sort handlers
-      'xml_views_handler_sort' => array(
-        'parent' => 'views_handler_sort',
-      ),
-
-      // Argument handlers
-      'xml_views_handler_argument' => array(
-        'parent' => 'views_handler_argument',
-      ),
-    ),
-  );
-}
-
-/**
- * Implementation of hook_views_plugins().
+ * Implements hook_views_plugins().
  */
 function xml_views_views_plugins() {
   return array(

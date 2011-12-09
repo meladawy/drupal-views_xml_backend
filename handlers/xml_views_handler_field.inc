@@ -5,14 +5,6 @@ class xml_views_handler_field extends views_handler_field {
     return check_plain($values[$this->field_alias]);
   }
 
-  function element_type() {
-    if (isset($this->definition['element type'])) {
-      return $this->definition['element type'];
-    }
-
-    return 'div';
-  }
-
   function option_definition() {
     $options = parent::option_definition();
     $options['xpath_selector'] = array('default' => '');
@@ -35,13 +27,18 @@ class xml_views_handler_field extends views_handler_field {
    */
   function query() {
     // Add the field.
+    $this->table_alias = 'xml';
     $this->field_alias = $this->query->add_field($this->table_alias, $this->options['xpath_selector']);
   }
 
-  /**
-   * Provide extra data to the administration form
-   */
-  function admin_summary() {
-    return $this->label();
+
+
+  function ui_name($short = FALSE) {
+    if (!empty($this->options['ui_name'])) {
+      $title = check_plain($this->options['ui_name']);
+      return $title;
+    }
+    $title = ($short && isset($this->definition['title short'])) ? $this->definition['title short'] : $this->definition['title'];
+    return t('!xpath: !title', array('!xpath' => $this->options['xpath_selector'], '!title' => $title));
   }
 }

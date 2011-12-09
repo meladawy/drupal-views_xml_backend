@@ -1,6 +1,6 @@
 <?php
 
-class xml_views_handler_filter extends views_handler_filter {
+class xml_views_handler_filter extends views_handler_filter_string {
   // exposed filter options
   var $no_single = TRUE;
 
@@ -19,104 +19,116 @@ class xml_views_handler_filter extends views_handler_filter {
    * adding/removing items from this array.
    */
   function operators() {
-    return array(
+    $operators = array(
       '=' => array(
         'title' => t('Is equal to'),
         'short' => t('='),
+        'method' => 'op_equal',
         'values' => 1,
       ),
       '!=' => array(
         'title' => t('Is not equal to'),
         'short' => t('!='),
+        'method' => 'op_equal',
+        'values' => 1,
+      ),
+      'contains' => array(
+        'title' => t('Contains'),
+        'short' => t('contains'),
+        'method' => 'op_contains',
+        'values' => 1,
+      ),
+      'word' => array(
+        'title' => t('Contains any word'),
+        'short' => t('has word'),
+        'method' => 'op_word',
+        'values' => 1,
+      ),
+      'allwords' => array(
+        'title' => t('Contains all words'),
+        'short' => t('has all'),
+        'method' => 'op_word',
+        'values' => 1,
+      ),
+      'starts-with' => array(
+        'title' => t('Starts with'),
+        'short' => t('begins'),
+        'method' => 'op_starts',
+        'values' => 1,
+      ),
+      '!starts-with' => array(
+        'title' => t('Does not start with'),
+        'short' => t('not_begins'),
+        'method' => 'op_not_starts',
+        'values' => 1,
+      ),
+      'ends-with' => array(
+        'title' => t('Ends with'),
+        'short' => t('ends'),
+        'method' => 'op_ends',
+        'values' => 1,
+      ),
+      '!ends-with' => array(
+        'title' => t('Does not end with'),
+        'short' => t('not_ends'),
+        'method' => 'op_not_ends',
+        'values' => 1,
+      ),
+      '!contains' => array(
+        'title' => t('Does not contain'),
+        'short' => t('!has'),
+        'method' => 'op_not',
+        'values' => 1,
+      ),
+      'shorterthan' => array(
+        'title' => t('Length is shorter than'),
+        'short' => t('shorter than'),
+        'method' => 'op_shorter',
+        'values' => 1,
+      ),
+      'longerthan' => array(
+        'title' => t('Length is longer than'),
+        'short' => t('longer than'),
+        'method' => 'op_longer',
         'values' => 1,
       ),
     );
-  }
-
-  /**
-   * Build strings from the operators() for 'select' options
-   */
-  function operator_options($which = 'title') {
-    $options = array();
-    foreach ($this->operators() as $id => $info) {
-      $options[$id] = $info[$which];
+    // if the definition allows for the empty operator, add it.
+    if (!empty($this->definition['allow empty'])) {
+      $operators += array(
+        'empty' => array(
+          'title' => t('Is empty (NULL)'),
+          'method' => 'op_empty',
+          'short' => t('empty'),
+          'values' => 0,
+        ),
+        'not empty' => array(
+          'title' => t('Is not empty (NOT NULL)'),
+          'method' => 'op_empty',
+          'short' => t('not empty'),
+          'values' => 0,
+        ),
+      );
     }
 
-    return $options;
+    return $operators;
   }
 
   function options_form(&$form, &$form_state) {
     parent::options_form($form, $form_state);
-    $form['xpath_selector'] = array(
-      '#type' => 'textfield',
-      '#title' => 'XPath selector',
-      '#description' => t('The field name in the table that will be used as the filter.'),
-      '#default_value' => $this->options['field_name'],
-      '#required' => TRUE,
-    );
-  }
-
-  function operator_values($values = 1) {
+    // Get a list of the available fields and arguments for token replacement.
     $options = array();
-    foreach ($this->operators() as $id => $info) {
-      if (isset($info['values']) && $info['values'] == $values) {
-        $options[] = $id;
-      }
+    foreach ($this->view->display_handler->get_handlers('field') as $field => $handler) {
+      $options[$handler->options['xpath_selector']] = $handler->ui_name();
     }
-
-    return $options;
-  }
-
-  /**
-   * Provide a simple textfield for equality
-   */
-  function value_form(&$form, &$form_state) {
-    // We have to make some choices when creating this as an exposed
-    // filter form. For example, if the operator is locked and thus
-    // not rendered, we can't render dependencies; instead we only
-    // render the form items we need.
-    $which = 'all';
-    if (!empty($form['operator'])) {
-      $source = ($form['operator']['#type'] == 'radios') ? 'radio:options[operator]' : 'edit-options-operator';
-    }
-    if (!empty($form_state['exposed'])) {
-      $identifier = $this->options['expose']['identifier'];
-
-      if (empty($this->options['expose']['use_operator']) || empty($this->options['expose']['operator'])) {
-        // exposed and locked.
-        $which = in_array($this->operator, $this->operator_values(1)) ? 'value' : 'none';
-      }
-      else {
-        $source = 'edit-' . form_clean_id($this->options['expose']['operator']);
-      }
-    }
-
-    if ($which == 'all' || $which == 'value') {
-      $form['value'] = array(
-        '#type' => 'textfield',
-        '#title' => t('Value'),
-        '#size' => 30,
-        '#default_value' => $this->value,
-      );
-      if (!empty($form_state['exposed']) && !isset($form_state['input'][$identifier])) {
-        $form_state['input'][$identifier] = $this->value;
-      }
-
-      if ($which == 'all') {
-        $form['value'] += array(
-          '#process' => array('views_process_dependency'),
-          '#dependency' => array($source => $this->operator_values(1)),
-        );
-      }
-    }
-
-    if (!isset($form['value'])) {
-      // Ensure there is something in the 'value'.
-      $form['value'] = array(
-        '#type' => 'value',
-        '#value' => NULL
-      );
-    }
+    $form['xpath_selector'] = array(
+      '#type' => 'select',
+      '#title' => t('Field'),
+      '#description' => t('The field name in the table that will be used as the filter.'),
+      '#default_value' => $this->options['xpath_selector'],
+      '#required' => TRUE,
+      '#options' => $options,
+    );
   }
 
   /**
@@ -127,6 +139,32 @@ class xml_views_handler_filter extends views_handler_filter {
    * and $this->value respectively.
    */
   function query() {
-    $this->query->add_filter($this->options['group'], $this->options['operator'], $this->options['xpath_selector'], $this->value);
+    $this->query->add_filter($this);
+  }
+
+  function generate() {
+    $operator = $this->options['operator'];
+    $xpath = $this->options['xpath_selector'];
+    $value = $this->options['value'];
+
+    // Awesome string escape.
+    $value = '"' . str_replace('"', '\"', $value) . '"';
+    if ($operator == '=' || $operator == '!=') {
+      return $xpath . $operator . $value;
+    }
+    if (strpos($operator, '!') === 0) {
+      $operator = ltrim($operator, '!');
+      return "not($operator($xpath,$value))";
+    }
+    return "$operator($xpath,$value)";
+  }
+
+  function ui_name($short = FALSE) {
+    if (!empty($this->options['ui_name'])) {
+      $title = check_plain($this->options['ui_name']);
+      return $title;
+    }
+    $title = ($short && isset($this->definition['title short'])) ? $this->definition['title short'] : $this->definition['title'];
+    return t('!xpath: !title', array('!xpath' => $this->options['xpath_selector'], '!title' => $title));
   }
 }

@@ -2,34 +2,25 @@
 
 class xml_views_plugin_query_xml extends views_plugin_query {
 
-  /**
-   * Constructor; Create the basic query object and fill with default values.
-   */
-  function init($base_table = '', $base_field, $options = array()) {
-    parent::init($base_table, $base_field, $options);
-
-    $this->xml_file = $this->options['xml_file'];
-    $this->row_xpath = $this->options['row_xpath'];
-  }
-
   function use_pager() {
     return FALSE;
   }
 
   /**
-   * Generate a query and a countquery from all of the information supplied
-   * to the object.
+   * Generate a query and a countquery from all of the information supplied to
+   * the object.
    *
    * @param $get_count
    *   Provide a countquery if this is true, otherwise provide a normal query.
    */
-  function query($view, $get_count = FALSE) {
+  function query($get_count = FALSE) {
     $row_xpath = $this->options['row_xpath'];
+
     $filter_string = '';
     if (!empty($this->filter)) {
       $filters = array();
       foreach ($this->filter as $filter) {
-        $filters[] = $filter['xpath_selector'] . $filter['operator'] . $filter['value'];
+        $filters[] = $filter->generate();
       }
       $filter_string =  '[' . implode(' and ', $filters) . ']';
     }
@@ -44,28 +35,60 @@ class xml_views_plugin_query_xml extends views_plugin_query {
    * Builds the necessary info to execute the query.
    */
   function build(&$view) {
-    $view->build_info['query'] = $this->query($view);
+    $view->build_info['query'] = $this->query();
     $view->build_info['count_query'] = '';
     $view->build_info['query_args'] = array();
   }
 
   function execute(&$view) {
-    $start = views_microtime();
+    $start = microtime();
 
-    $file = simplexml_load_file($this->options['xml_file']);
-    $rows = $file->xpath($view->build_info['query']);
+    // Make sure that an xml file exists.
+    // This could for example happen if you come from the add wizard to the
+    // actual views edit page.
+    if (empty($this->options['xml_file'])) {
+      return FALSE;
+    }
+
+    $doc = new DOMDocument();
+    $doc->load($this->options['xml_file']);
+    // If the file fails to load, bail.
+    if (!$doc) {
+      return;
+    }
+
+    $xpath = new DOMXPath($doc);
+
+    // Register namespaces.
+    $simple = simplexml_import_dom($doc);
+    if (!$simple) {
+      return;
+    }
+    $namespaces = $simple->getNamespaces(TRUE);
+    foreach ($namespaces as $prefix => $namespace) {
+      if ($prefix === '') {
+        if (empty($this->options['default_namespace'])) {
+          $xpath->registerNamespace('default', $namespace);
+        }
+        else {
+          $xpath->registerNamespace($this->options['default_namespace'], $namespace);
+        }
+      }
+      $xpath->registerNamespace($prefix, $namespace);
+    }
+
+    $rows = $xpath->query($view->build_info['query']);
     $result = array();
-
     foreach ($rows as $row) {
       $item = array();
       foreach ($this->fields as $field) {
-        $xpath = $row->xpath($field['field']);
-        $item[$field['field']] = (string)$xpath[0];
+        $node_list = $xpath->evaluate($field['field'], $row);
+        $item[$field['field']] = $node_list->item(0)->nodeValue;
       }
       if (!empty($this->orderby)) {
         foreach ($this->orderby as $orderby) {
-          $xpath = $row->xpath($orderby['field']);
-          $item[$orderby['field']] = (string)$xpath[0];
+        $node_list = $xpath->evaluate($orderby['field'], $row);
+        $item[$orderby['field']] = $node_list->item(0)->nodeValue;
         }
       }
       $result[] = $item;
@@ -81,7 +104,7 @@ class xml_views_plugin_query_xml extends views_plugin_query {
     $view->result = $result;
     $view->total_rows = count($result);
 
-    $view->execute_time = views_microtime() - $start;
+    $view->execute_time = microtime() - $start;
   }
 
   function add_signature(&$view) {}
@@ -90,6 +113,7 @@ class xml_views_plugin_query_xml extends views_plugin_query {
     $options = parent::option_definition();
     $options['xml_file'] = array('default' => '');
     $options['row_xpath'] = array('default' => '');
+    $options['default_namespace'] = array('default' => '');
 
     return $options;
   }
@@ -107,6 +131,13 @@ class xml_views_plugin_query_xml extends views_plugin_query {
       '#default_value' => $this->options['row_xpath'],
       '#description' => t("An xpath function that selects rows."),
       '#required' => TRUE,
+    );
+    $form['default_namespace'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Default namespace'),
+      '#default_value' => $this->options['default_namespace'],
+      '#description' => t("If the xml contains a default namespace, it will accessible as 'default:element'. If you want something different, declare it here."),
+      '#required' => FALSE,
     );
   }
 
@@ -134,13 +165,8 @@ class xml_views_plugin_query_xml extends views_plugin_query {
     );
   }
 
-  function add_filter($group, $operator, $xpath_selector, $value) {
-    $this->filter[] = array(
-      'group' => $field,
-      'operator' => $operator,
-      'xpath_selector' => $xpath_selector,
-      'value' => $value,
-    );
+  function add_filter($filter) {
+    $this->filter[] = $filter;
   }
 }
 
