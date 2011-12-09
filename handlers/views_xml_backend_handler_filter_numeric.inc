@@ -1,4 +1,8 @@
 <?php
+/**
+ * @file
+ * Numeric filter handler for views_xml_backend.
+ */
 
 class views_xml_backend_handler_filter_numeric extends views_handler_filter_numeric {
   // exposed filter options

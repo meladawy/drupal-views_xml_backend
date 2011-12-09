@@ -1,4 +1,8 @@
 <?php
+/**
+ * @file
+ * Base sort handler for views_xml_backend.
+ */
 
 class views_xml_backend_handler_sort extends views_handler_sort {
   function option_definition() {

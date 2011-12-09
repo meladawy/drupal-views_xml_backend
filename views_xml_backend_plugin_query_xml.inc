@@ -1,4 +1,8 @@
 <?php
+/**
+ * @file
+ * Query plugin for views_xml_backend.
+ */
 
 class views_xml_backend_plugin_query_xml extends views_plugin_query {
 

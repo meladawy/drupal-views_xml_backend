@@ -5,7 +5,7 @@ dependencies[] = views
 core = 7.x
 
 files[] = views_xml_backend_plugin_query_xml.inc
-# Handlers
+; Handlers
 files[] = handlers/views_xml_backend_handler_field.inc
 files[] = handlers/views_xml_backend_handler_field_numeric.inc
 files[] = handlers/views_xml_backend_handler_filter.inc

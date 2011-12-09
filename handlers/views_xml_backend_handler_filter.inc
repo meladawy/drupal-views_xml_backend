@@ -1,4 +1,8 @@
 <?php
+/**
+ * @file
+ * Base filter handler for views_xml_backend.
+ */
 
 class views_xml_backend_handler_filter extends views_handler_filter_string {
   // exposed filter options

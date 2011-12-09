@@ -1,10 +1,14 @@
 <?php
-
 /**
- * Implements hook_views_data
+ * @file
+ * Views hooks for views_xml_backend.
  */
 
-function xml_views_views_data() {
+/**
+ * Implements hook_views_data().
+ */
+function views_xml_backend_views_data() {
+  $data = array();
   $data['xml']['table']['group'] = t('XML');
 
   $data['xml']['table']['base'] = array(
@@ -18,7 +22,6 @@ function xml_views_views_data() {
     'help' => t('Text in the XML file.'),
     'field' => array(
       'handler' => 'views_xml_backend_handler_field',
-      'element type' => 'div',
     ),
     'filter' => array(
       'handler' => 'views_xml_backend_handler_filter',
@@ -36,7 +39,6 @@ function xml_views_views_data() {
     'help' => t('A number in the XML file.'),
     'field' => array(
       'handler' => 'views_xml_backend_handler_field_numeric',
-      'element type' => 'div',
     ),
     'filter' => array(
       'handler' => 'views_xml_backend_handler_filter_numeric',
@@ -55,13 +57,13 @@ function xml_views_views_data() {
 /**
  * Implements hook_views_plugins().
  */
-function xml_views_views_plugins() {
+function views_xml_backend_views_plugins() {
   return array(
     'query' => array(
       'views_xml_backend' => array(
         'title' => t('XML'),
         'help' => t('Reads from an XML file.'),
-        'handler' => 'views_xml_backend_plugin_query_xml.inc',
+        'handler' => 'views_xml_backend_plugin_query_xml',
       ),
     ),
   );
