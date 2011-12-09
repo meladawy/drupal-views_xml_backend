@@ -1,6 +1,6 @@
 <?php
 
-class views_xml_backend_plugin_query_xml.inc extends views_plugin_query {
+class views_xml_backend_plugin_query_xml extends views_plugin_query {
 
   function use_pager() {
     return FALSE;
