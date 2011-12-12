@@ -101,8 +101,8 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
       // Array reverse, because the most specific are first - PHP works the
       // opposite way of SQL.
       foreach (array_reverse($this->orderby) as $orderby) {
-        _xml_views_sort_field($orderby['field'], $orderby['order']);
-        uasort($result, '_xml_views_sort');
+        _views_xml_backend_sort_field($orderby['field'], $orderby['order']);
+        uasort($result, '_views_xml_backend_sort');
       }
     }
     $view->result = $result;
@@ -174,7 +174,7 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
   }
 }
 
-function _xml_views_sort_field($field = NULL, $direction = NULL) {
+function _views_xml_backend_sort_field($field = NULL, $direction = NULL) {
   static $f;
   if ($field) {
     $f = array('field' => $field, 'direction' => $direction);
@@ -182,8 +182,8 @@ function _xml_views_sort_field($field = NULL, $direction = NULL) {
   return $f;
 }
 
-function _xml_views_sort($a, $b) {
-  $sort = _xml_views_sort_field();
+function _views_xml_backend_sort($a, $b) {
+  $sort = _views_xml_backend_sort_field();
   $field = $sort['field'];
   $a_weight = (is_array($a) && isset($a[$field])) ? $a[$field] : 0;
   $b_weight = (is_array($b) && isset($b[$field])) ? $b[$field] : 0;
