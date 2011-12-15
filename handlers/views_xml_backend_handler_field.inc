@@ -45,4 +45,13 @@ class views_xml_backend_handler_field extends views_handler_field {
     $title = ($short && isset($this->definition['title short'])) ? $this->definition['title short'] : $this->definition['title'];
     return t('!xpath: !title', array('!xpath' => $this->options['xpath_selector'], '!title' => $title));
   }
+
+  /**
+   * Called to determine what to tell the clicksorter.
+   */
+  function click_sort($order) {
+    if (isset($this->field_alias)) {
+      $this->query->add_orderby(NULL, $this->field_alias, $order);
+    }
+  }
 }

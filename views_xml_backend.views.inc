@@ -22,6 +22,7 @@ function views_xml_backend_views_data() {
     'help' => t('Text in the XML file.'),
     'field' => array(
       'handler' => 'views_xml_backend_handler_field',
+      'click sortable' => TRUE,
     ),
     'filter' => array(
       'handler' => 'views_xml_backend_handler_filter',

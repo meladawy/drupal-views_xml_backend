@@ -13,12 +13,18 @@ class views_xml_backend_handler_sort extends views_handler_sort {
 
   function options_form(&$form, &$form_state) {
     parent::options_form($form, $form_state);
+    // Get a list of the available fields and arguments for token replacement.
+    $options = array();
+    foreach ($this->view->display_handler->get_handlers('field') as $field => $handler) {
+      $options[$handler->options['xpath_selector']] = $handler->ui_name();
+    }
     $form['xpath_selector'] = array(
-      '#title' => t('XPath selector'),
-      '#description' => t('The xpath selector'),
-      '#type' => 'textfield',
+      '#type' => 'select',
+      '#title' => t('Field'),
+      '#description' => t('The field name in the table that will be used as the filter.'),
       '#default_value' => $this->options['xpath_selector'],
       '#required' => TRUE,
+      '#options' => $options,
     );
   }
 
@@ -27,5 +33,14 @@ class views_xml_backend_handler_sort extends views_handler_sort {
    */
   function query() {
     $this->query->add_orderby($this->table_alias, $this->options['xpath_selector'], $this->options['order']);
+  }
+
+  function ui_name($short = FALSE) {
+    if (!empty($this->options['ui_name'])) {
+      $title = check_plain($this->options['ui_name']);
+      return $title;
+    }
+    $title = ($short && isset($this->definition['title short'])) ? $this->definition['title short'] : $this->definition['title'];
+    return t('!xpath: !title', array('!xpath' => $this->options['xpath_selector'], '!title' => $title));
   }
 }

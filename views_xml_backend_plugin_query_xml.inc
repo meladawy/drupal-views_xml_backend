@@ -48,6 +48,9 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
     $parsed = parse_url($uri);
     // Check for local file.
     if (empty($parsed['host'])) {
+      if (!file_exists($uri)) {
+        drupal_set_message(t('Views XML Backend: Local file not found.'), 'error');
+      }
       return file_get_contents($uri);
     }
 
@@ -70,7 +73,9 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
     }
 
     $result = drupal_http_request($uri, array('headers' => $headers));
-
+    if (isset($result->error)) {
+      drupal_set_message(t($result->error), 'error');
+    }
     $cache_file_uri = "$destination/$cache_file";
 
     if ($result->code == 304) {
@@ -138,14 +143,6 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
         $node_list = $xpath->evaluate($field['field'], $row);
         if ($node_list) {
           $item[$field['field']] = $node_list->item(0)->nodeValue;
-        }
-      }
-      if (!empty($this->orderby)) {
-        foreach ($this->orderby as $orderby) {
-          $node_list = $xpath->evaluate($orderby['field'], $row);
-          if ($node_list) {
-            $item[$orderby['field']] = $node_list->item(0)->nodeValue;
-          }
         }
       }
       $result[] = $item;
@@ -230,7 +227,7 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
 function _views_xml_backend_sort_field($field = NULL, $direction = NULL) {
   static $f;
   if ($field) {
-    $f = array('field' => $field, 'direction' => $direction);
+    $f = array('field' => $field, 'direction' => strtolower($direction));
   }
   return $f;
 }
@@ -238,12 +235,12 @@ function _views_xml_backend_sort_field($field = NULL, $direction = NULL) {
 function _views_xml_backend_sort($a, $b) {
   $sort = _views_xml_backend_sort_field();
   $field = $sort['field'];
-  $a_weight = (is_array($a) && isset($a[$field])) ? $a[$field] : 0;
-  $b_weight = (is_array($b) && isset($b[$field])) ? $b[$field] : 0;
+  $a_weight = isset($a[$field]) ? $a[$field] : 0;
+  $b_weight = isset($b[$field]) ? $b[$field] : 0;
   if ($a_weight == $b_weight) {
     return 0;
   }
-  if (strtolower($sort['direction']) == 'asc') {
+  if ($sort['direction'] === 'asc') {
     return ($a_weight < $b_weight) ? -1 : 1;
   }
   else {
