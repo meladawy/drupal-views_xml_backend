@@ -44,6 +44,51 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
     $view->build_info['query_args'] = array();
   }
 
+  function fetch_file($uri) {
+    $parsed = parse_url($uri);
+    // Check for local file.
+    if (empty($parsed['host'])) {
+      return file_get_contents($uri);
+    }
+
+    $destination = 'public://views_xml_backend';
+    if (!file_prepare_directory($destination, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS)) {
+      throw new Exception(t('Views XML Backend directory either cannot be created or is not writable.'));
+    }
+
+    $headers = array();
+    $cache_file = 'views_xml_backend_' . md5($uri);
+    if ($cache = cache_get($cache_file)) {
+      $last_headers = $cache->data;
+
+      if (!empty($last_headers['etag'])) {
+        $headers['If-None-Match'] = $last_headers['etag'];
+      }
+      if (!empty($last_headers['last-modified'])) {
+        $headers['If-Modified-Since'] = $last_headers['last-modified'];
+      }
+    }
+
+    $result = drupal_http_request($uri, array('headers' => $headers));
+
+    $cache_file_uri = "$destination/$cache_file";
+
+    if ($result->code == 304) {
+      if (file_exists($cache_file_uri)) {
+        return file_get_contents($cache_file_uri);
+      }
+      // We have the headers but no cache file. :(
+      // Run it back.
+      cache_clear_all($cache_file, 'cache');
+      return $this->fetch_file($uri);
+    }
+
+    // As learned from Feeds caching mechanism, save to file.
+    file_save_data($result->data, $cache_file_uri, FILE_EXISTS_REPLACE);
+    cache_set($cache_file, $result->headers);
+    return $result->data;
+  }
+
   function execute(&$view) {
     $start = microtime();
 
@@ -55,7 +100,7 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
     }
 
     $data = new stdClass();
-    $data->contents = file_get_contents($this->options['xml_file']);
+    $data->contents = $this->fetch_file($this->options['xml_file']);
     drupal_alter('views_xml_backend_data', $data, $view->name);
 
     $doc = new DOMDocument();
