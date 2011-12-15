@@ -54,7 +54,7 @@ class views_xml_backend_handler_filter_numeric extends views_handler_filter_nume
     if ($options['operator'] == 'not between') {
       return $options['xpath_selector'] . '<=' . $this->value['min'] . ' or ' . $options['xpath_selector'] . '>=' . $this->value['max'];
     }
-    return $this->options['xpath_selector'] . $this->options['operator'] . $this->options['value'];
+    return $options['xpath_selector'] . $options['operator'] . $this->value['value'];
   }
 
   function ui_name($short = FALSE) {
