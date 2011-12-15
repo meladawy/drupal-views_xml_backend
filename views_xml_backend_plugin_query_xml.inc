@@ -142,8 +142,10 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
       }
       if (!empty($this->orderby)) {
         foreach ($this->orderby as $orderby) {
-        $node_list = $xpath->evaluate($orderby['field'], $row);
-        $item[$orderby['field']] = $node_list->item(0)->nodeValue;
+          $node_list = $xpath->evaluate($orderby['field'], $row);
+          if ($node_list) {
+            $item[$orderby['field']] = $node_list->item(0)->nodeValue;
+          }
         }
       }
       $result[] = $item;
