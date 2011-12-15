@@ -39,6 +39,11 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
    * Builds the necessary info to execute the query.
    */
   function build(&$view) {
+    $view->init_pager();
+
+    // Let the pager modify the query to add limits.
+    $this->pager->query();
+
     $view->build_info['query'] = $this->query();
     $view->build_info['count_query'] = '';
     $view->build_info['query_args'] = array();
@@ -135,30 +140,67 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
       $xpath->registerNamespace($prefix, $namespace);
     }
 
-    $rows = $xpath->query($view->build_info['query']);
-    $result = array();
-    foreach ($rows as $row) {
-      $item = array();
-      foreach ($this->fields as $field) {
-        $node_list = $xpath->evaluate($field['field'], $row);
-        if ($node_list) {
-          $item[$field['field']] = $node_list->item(0)->nodeValue;
+    try {
+      if ($this->pager->use_count_query() || !empty($view->get_total_rows)) {
+        // $this->pager->execute_count_query($count_query);
+        // Hackish execute_count_query implementation.
+        $this->pager->total_items = $xpath->evaluate('count(' . $view->build_info['query'] . ')');
+        if (!empty($this->pager->options['offset'])) {
+          $this->pager->total_items -= $this->pager->options['offset'];
+        }
+
+        $this->pager->update_page_info();
+      }
+
+      // Let the pager modify the query to add limits.
+      //$this->pager->pre_execute($query);
+
+      if (!empty($this->limit) || !empty($this->offset)) {
+        // We can't have an offset without a limit, so provide a very large limit instead.
+        $limit  = intval(!empty($this->limit) ? $this->limit : 999999);
+        $offset = intval(!empty($this->offset) ? $this->offset : 0);
+        $limit += $offset;
+        $view->build_info['query'] .= "[position() > $offset and not(position() > $limit)]";
+      }
+
+      $rows = $xpath->query($view->build_info['query']);
+      $result = array();
+      foreach ($rows as $row) {
+        $item = array();
+        foreach ($this->fields as $field) {
+          $node_list = $xpath->evaluate($field['field'], $row);
+          if ($node_list) {
+            $item[$field['field']] = $node_list->item(0)->nodeValue;
+          }
+        }
+        $result[] = $item;
+      }
+      if (!empty($this->orderby)) {
+        // Array reverse, because the most specific are first - PHP works the
+        // opposite way of SQL.
+        foreach (array_reverse($this->orderby) as $orderby) {
+          _views_xml_backend_sort_field($orderby['field'], $orderby['order']);
+          uasort($result, '_views_xml_backend_sort');
         }
       }
-      $result[] = $item;
+      $view->result = $result;
+      $view->total_rows = count($result);
+
+      $view->execute_time = microtime() - $start;
+
+      $this->pager->post_execute($view->result);
+
     }
-    if (!empty($this->orderby)) {
-      // Array reverse, because the most specific are first - PHP works the
-      // opposite way of SQL.
-      foreach (array_reverse($this->orderby) as $orderby) {
-        _views_xml_backend_sort_field($orderby['field'], $orderby['order']);
-        uasort($result, '_views_xml_backend_sort');
+    catch (Exception $e) {
+      $view->result = array();
+      if (!empty($view->live_preview)) {
+        drupal_set_message(time());
+        drupal_set_message($e->getMessage(), 'error');
+      }
+      else {
+        debug('Exception: ' . $e->getMessage());
       }
     }
-    $view->result = $result;
-    $view->total_rows = count($result);
-
-    $view->execute_time = microtime() - $start;
   }
 
   function add_signature(&$view) {}
@@ -245,5 +287,12 @@ function _views_xml_backend_sort($a, $b) {
   }
   else {
     return ($a_weight > $b_weight) ? -1 : 1;
+  }
+}
+
+class views_xml_backend_count_query {
+  public function __construct($query, $data) {
+    $this->query = $query;
+    $this->data = $data;
   }
 }
