@@ -87,7 +87,9 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
       $item = array();
       foreach ($this->fields as $field) {
         $node_list = $xpath->evaluate($field['field'], $row);
-        $item[$field['field']] = $node_list->item(0)->nodeValue;
+        if ($node_list) {
+          $item[$field['field']] = $node_list->item(0)->nodeValue;
+        }
       }
       if (!empty($this->orderby)) {
         foreach ($this->orderby as $orderby) {
