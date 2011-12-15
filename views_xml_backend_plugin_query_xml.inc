@@ -54,8 +54,12 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
       return FALSE;
     }
 
+    $data = new stdClass();
+    $data->contents = file_get_contents($this->options['xml_file']);
+    drupal_alter('views_xml_backend_data', $data, $view->name);
+
     $doc = new DOMDocument();
-    $doc->load($this->options['xml_file']);
+    $doc->loadXML($data->contents);
     // If the file fails to load, bail.
     if (!$doc) {
       return;
@@ -72,10 +76,10 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
     foreach ($namespaces as $prefix => $namespace) {
       if ($prefix === '') {
         if (empty($this->options['default_namespace'])) {
-          $xpath->registerNamespace('default', $namespace);
+          $prefix = 'default';
         }
         else {
-          $xpath->registerNamespace($this->options['default_namespace'], $namespace);
+          $prefix = $this->options['default_namespace'];
         }
       }
       $xpath->registerNamespace($prefix, $namespace);
