@@ -6,10 +6,6 @@
 
 class views_xml_backend_plugin_query_xml extends views_plugin_query {
 
-  function use_pager() {
-    return FALSE;
-  }
-
   /**
    * Generate a query and a countquery from all of the information supplied to
    * the object.
@@ -26,6 +22,9 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
       foreach ($this->filter as $filter) {
         $filters[] = $filter->generate();
       }
+      /**
+       * @todo Add an option for the filters to be 'and' or 'or'.
+       */
       $filter_string =  '[' . implode(' and ', $filters) . ']';
     }
     return $row_xpath . ($filter_string ? $filter_string : '');
@@ -55,6 +54,7 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
     if (empty($parsed['host'])) {
       if (!file_exists($uri)) {
         drupal_set_message(t('Views XML Backend: Local file not found.'), 'error');
+        return;
       }
       return file_get_contents($uri);
     }
@@ -80,6 +80,7 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
     $result = drupal_http_request($uri, array('headers' => $headers));
     if (isset($result->error)) {
       drupal_set_message(t($result->error), 'error');
+      return;
     }
     $cache_file_uri = "$destination/$cache_file";
 
