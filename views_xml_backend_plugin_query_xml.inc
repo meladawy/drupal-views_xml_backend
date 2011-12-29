@@ -171,7 +171,16 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
         foreach ($this->fields as $field) {
           $node_list = $xpath->evaluate($field['field'], $row);
           if ($node_list) {
-            $item[$field['field']] = $node_list->item(0)->nodeValue;
+            if ($field['multiple']) {
+              $values = array();
+              foreach ($node_list as $node) {
+                $values[] = $node->nodeValue;
+              }
+              $item[$field['field']] = $values;
+            }
+            else {
+              $item[$field['field']] = $node_list->item(0)->nodeValue;
+            }
           }
         }
         $result[] = $item;

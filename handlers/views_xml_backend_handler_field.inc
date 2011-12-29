@@ -6,12 +6,31 @@
 
 class views_xml_backend_handler_field extends views_handler_field {
   function render($values) {
-    return check_plain($values[$this->field_alias]);
+    $values = $values[$this->field_alias];
+    if ($this->options['multiple']) {
+      foreach ($values as $i => $value) {
+        $values[$i] = check_plain($value);
+      }
+      if ($this->options['list_type'] == 'other') {
+        return implode(check_plain($this->options['custom_separator']), $values);
+      }
+      if ($this->options['list_type'] == 'br') {
+        return implode('<br />', $values);
+      }
+      return theme('item_list', array(
+        'items' => $values,
+        'type' => $this->options['list_type']
+      ));
+    }
+    return check_plain($values);
   }
 
   function option_definition() {
     $options = parent::option_definition();
     $options['xpath_selector'] = array('default' => '');
+    $options['multiple'] = array('default' => FALSE);
+    $options['list_type'] = array('default' => 'ul');
+    $options['custom_separator'] = array('default' => ', ');
     return $options;
   }
 
@@ -24,6 +43,48 @@ class views_xml_backend_handler_field extends views_handler_field {
       '#default_value' => $this->options['xpath_selector'],
       '#required' => TRUE,
     );
+    $form['multiple'] = array(
+      '#title' => t('Allow multiple'),
+      '#description' => t('Treat this field as multi-valued.'),
+      '#type' => 'checkbox',
+      '#default_value' => $this->options['multiple'],
+    );
+    $form['list_options'] = array(
+      '#type' => 'fieldset',
+      '#states' => array(
+        'visible' => array(
+          ':input[name="options[multiple]"]' => array(
+            'checked' => TRUE,
+          ),
+        ),
+      ),
+    );
+    $form['list_type'] = array(
+      '#title' => t('List type'),
+      '#description' => t('The type of list.'),
+      '#type' => 'radios',
+      '#default_value' => $this->options['list_type'],
+      '#options' => array(
+        'ul' => t('Unordered list'),
+        'ol' => t('Ordered list'),
+        'br' => check_plain('<br>'),
+        'other' => t('Custom separator'),
+      ),
+      '#fieldset' => 'list_options',
+    );
+    $form['custom_separator'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Separator'),
+      '#default_value' => $this->options['custom_separator'],
+      '#states' => array(
+        'visible' => array(
+          ':input[name="options[list_type]"]' => array(
+            'value' => 'other',
+          ),
+        ),
+      ),
+      '#fieldset' => 'list_options',
+    );
   }
 
   /**
@@ -32,7 +93,13 @@ class views_xml_backend_handler_field extends views_handler_field {
   function query() {
     // Add the field.
     $this->table_alias = 'xml';
-    $this->field_alias = $this->query->add_field($this->table_alias, $this->options['xpath_selector']);
+
+    $this->field_alias = $this->query->add_field(
+      $this->table_alias,
+      $this->options['xpath_selector'],
+      '',
+      $this->options
+    );
   }
 
 
@@ -42,8 +109,16 @@ class views_xml_backend_handler_field extends views_handler_field {
       $title = check_plain($this->options['ui_name']);
       return $title;
     }
-    $title = ($short && isset($this->definition['title short'])) ? $this->definition['title short'] : $this->definition['title'];
-    return t('!xpath: !title', array('!xpath' => $this->options['xpath_selector'], '!title' => $title));
+    $title = $this->definition['title'];
+
+    if ($short && isset($this->definition['title short'])) {
+      $title = $this->definition['title short'];
+    }
+
+    return t('!xpath: !title', array(
+      '!xpath' => $this->options['xpath_selector'],
+      '!title' => $title
+    ));
   }
 
   /**
