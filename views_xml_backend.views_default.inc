@@ -14,7 +14,7 @@ function views_xml_backend_views_default_views() {
   $view->human_name = 'Drupal Project Releases';
   $view->core = 7;
   $view->api_version = '3.0';
-  $view->disabled = TRUE; /* Edit this to true to make a default view disabled initially */
+  $view->disabled = FALSE; /* Edit this to true to make a default view disabled initially */
 
   /* Display: Master */
   $handler = $view->new_display('default', 'Master', 'default');
@@ -25,8 +25,11 @@ function views_xml_backend_views_default_views() {
   $handler->display->display_options['query']['options']['xml_file'] = 'http://updates.drupal.org/release-history/drupal/7.x';
   $handler->display->display_options['query']['options']['row_xpath'] = '/project/releases/release';
   $handler->display->display_options['exposed_form']['type'] = 'basic';
-  $handler->display->display_options['pager']['type'] = 'none';
+  $handler->display->display_options['pager']['type'] = 'full';
+  $handler->display->display_options['pager']['options']['items_per_page'] = '10';
   $handler->display->display_options['pager']['options']['offset'] = '0';
+  $handler->display->display_options['pager']['options']['id'] = '0';
+  $handler->display->display_options['pager']['options']['expose']['items_per_page_options_all'] = 0;
   $handler->display->display_options['style_plugin'] = 'table';
   $handler->display->display_options['style_options']['columns'] = array(
     'text' => 'text',
@@ -135,6 +138,30 @@ function views_xml_backend_views_default_views() {
   $handler->display->display_options['fields']['numeric']['empty_zero'] = 0;
   $handler->display->display_options['fields']['numeric']['hide_alter_empty'] = 1;
   $handler->display->display_options['fields']['numeric']['xpath_selector'] = 'version_major';
+  /* Field: terms/term/value: Text */
+  $handler->display->display_options['fields']['text_3']['id'] = 'text_3';
+  $handler->display->display_options['fields']['text_3']['table'] = 'xml';
+  $handler->display->display_options['fields']['text_3']['field'] = 'text';
+  $handler->display->display_options['fields']['text_3']['label'] = 'Release type';
+  $handler->display->display_options['fields']['text_3']['alter']['alter_text'] = 0;
+  $handler->display->display_options['fields']['text_3']['alter']['make_link'] = 0;
+  $handler->display->display_options['fields']['text_3']['alter']['absolute'] = 0;
+  $handler->display->display_options['fields']['text_3']['alter']['external'] = 0;
+  $handler->display->display_options['fields']['text_3']['alter']['replace_spaces'] = 0;
+  $handler->display->display_options['fields']['text_3']['alter']['trim_whitespace'] = 0;
+  $handler->display->display_options['fields']['text_3']['alter']['nl2br'] = 0;
+  $handler->display->display_options['fields']['text_3']['alter']['word_boundary'] = 1;
+  $handler->display->display_options['fields']['text_3']['alter']['ellipsis'] = 1;
+  $handler->display->display_options['fields']['text_3']['alter']['strip_tags'] = 0;
+  $handler->display->display_options['fields']['text_3']['alter']['trim'] = 0;
+  $handler->display->display_options['fields']['text_3']['alter']['html'] = 0;
+  $handler->display->display_options['fields']['text_3']['element_label_colon'] = 1;
+  $handler->display->display_options['fields']['text_3']['element_default_classes'] = 1;
+  $handler->display->display_options['fields']['text_3']['hide_empty'] = 0;
+  $handler->display->display_options['fields']['text_3']['empty_zero'] = 0;
+  $handler->display->display_options['fields']['text_3']['hide_alter_empty'] = 1;
+  $handler->display->display_options['fields']['text_3']['xpath_selector'] = 'terms/term/value';
+  $handler->display->display_options['fields']['text_3']['multiple'] = 1;
   /* Filter criterion: version_major: Numeric */
   $handler->display->display_options['filters']['numeric']['id'] = 'numeric';
   $handler->display->display_options['filters']['numeric']['table'] = 'xml';
