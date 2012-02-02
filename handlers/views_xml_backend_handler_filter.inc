@@ -120,18 +120,12 @@ class views_xml_backend_handler_filter extends views_handler_filter_string {
 
   function options_form(&$form, &$form_state) {
     parent::options_form($form, $form_state);
-    // Get a list of the available fields and arguments for token replacement.
-    $options = array();
-    foreach ($this->view->display_handler->get_handlers('field') as $field => $handler) {
-      $options[$handler->options['xpath_selector']] = $handler->ui_name();
-    }
     $form['xpath_selector'] = array(
-      '#type' => 'select',
-      '#title' => t('Field'),
+      '#type' => 'textfield',
+      '#title' => 'XPath selector',
       '#description' => t('The field name in the table that will be used as the filter.'),
       '#default_value' => $this->options['xpath_selector'],
       '#required' => TRUE,
-      '#options' => $options,
     );
   }
 

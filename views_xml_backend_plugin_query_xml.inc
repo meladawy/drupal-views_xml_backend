@@ -104,8 +104,8 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
     $start = microtime();
 
     // Make sure that an xml file exists.
-    // This could for example happen if you come from the add wizard to the
-    // actual views edit page.
+    // This could happen if you come from the add wizard to the actual views
+    // edit page.
     if (empty($this->options['xml_file'])) {
       return FALSE;
     }
@@ -171,6 +171,7 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
         foreach ($this->fields as $field) {
           $node_list = $xpath->evaluate($field['field'], $row);
           if ($node_list) {
+            // Allow multiple values in a field.
             if ($field['multiple']) {
               $values = array();
               foreach ($node_list as $node) {
@@ -178,6 +179,7 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
               }
               $item[$field['field']] = $values;
             }
+            // Single value, just pull the first.
             else {
               $item[$field['field']] = $node_list->item(0)->nodeValue;
             }

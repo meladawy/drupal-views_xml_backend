@@ -18,20 +18,12 @@ class views_xml_backend_handler_filter_numeric extends views_handler_filter_nume
 
   function options_form(&$form, &$form_state) {
     parent::options_form($form, $form_state);
-    // Get a list of the available fields and arguments for token replacement.
-    $options = array();
-    foreach ($this->view->display_handler->get_handlers('field') as $field => $handler) {
-      if ($handler->field == 'numeric') {
-        $options[$handler->options['xpath_selector']] = $handler->ui_name();
-      }
-    }
     $form['xpath_selector'] = array(
-      '#type' => 'select',
-      '#title' => t('Field'),
+      '#type' => 'textfield',
+      '#title' => 'XPath selector',
       '#description' => t('The field name in the table that will be used as the filter.'),
       '#default_value' => $this->options['xpath_selector'],
       '#required' => TRUE,
-      '#options' => $options,
     );
   }
 
@@ -47,14 +39,16 @@ class views_xml_backend_handler_filter_numeric extends views_handler_filter_nume
   }
 
   function generate() {
-    $options = $this->options;
-    if ($options['operator'] == 'between') {
-      return $options['xpath_selector'] . '>=' . $this->value['min'] . ' and ' . $options['xpath_selector'] . '<=' . $this->value['max'];
+    $operator = $this->options['operator'];
+    $xpath = $this->options['xpath_selector'];
+
+    if ($operator == 'between') {
+      return $xpath . '>=' . $this->value['min'] . ' and ' . $xpath . '<=' . $this->value['max'];
     }
-    if ($options['operator'] == 'not between') {
-      return $options['xpath_selector'] . '<=' . $this->value['min'] . ' or ' . $options['xpath_selector'] . '>=' . $this->value['max'];
+    if ($operator == 'not between') {
+      return $xpath . '<=' . $this->value['min'] . ' or ' . $xpath . '>=' . $this->value['max'];
     }
-    return $options['xpath_selector'] . $options['operator'] . $this->value['value'];
+    return $xpath . $operator . $this->value['value'];
   }
 
   function ui_name($short = FALSE) {
