@@ -5,28 +5,30 @@
  */
 function views_xml_backend_views_default_views() {
   $views = array();
+  // Export code begin.
 
   $view = new view;
-  $view->name = 'drupal_project_releases';
+  $view->name = 'views_project_releases';
   $view->description = 'Releases for a project by API compatability version';
   $view->tag = 'default';
   $view->base_table = 'xml';
-  $view->human_name = 'Drupal Project Releases';
+  $view->human_name = 'Views project releases';
   $view->core = 7;
   $view->api_version = '3.0';
   $view->disabled = TRUE; /* Edit this to true to make a default view disabled initially */
 
   /* Display: Master */
   $handler = $view->new_display('default', 'Master', 'default');
-  $handler->display->display_options['title'] = 'Drupal Project Releases';
+  $handler->display->display_options['title'] = 'Views project releases';
+  $handler->display->display_options['use_ajax'] = TRUE;
   $handler->display->display_options['access']['type'] = 'none';
   $handler->display->display_options['cache']['type'] = 'none';
   $handler->display->display_options['query']['type'] = 'views_query';
-  $handler->display->display_options['query']['options']['xml_file'] = 'http://updates.drupal.org/release-history/drupal/7.x';
+  $handler->display->display_options['query']['options']['xml_file'] = 'http://updates.drupal.org/release-history/views/6.x';
   $handler->display->display_options['query']['options']['row_xpath'] = '/project/releases/release';
   $handler->display->display_options['exposed_form']['type'] = 'basic';
   $handler->display->display_options['pager']['type'] = 'full';
-  $handler->display->display_options['pager']['options']['items_per_page'] = '10';
+  $handler->display->display_options['pager']['options']['items_per_page'] = '5';
   $handler->display->display_options['pager']['options']['offset'] = '0';
   $handler->display->display_options['pager']['options']['id'] = '0';
   $handler->display->display_options['pager']['options']['expose']['items_per_page_options_all'] = 0;
@@ -176,8 +178,9 @@ function views_xml_backend_views_default_views() {
 
   /* Display: Page */
   $handler = $view->new_display('page', 'Page', 'page');
-  $handler->display->display_options['path'] = 'drupal-project-releases';
+  $handler->display->display_options['path'] = 'views-project-releases';
 
+  // Export code end.
   $views[$view->name] = $view;
 
   return $views;
