@@ -75,7 +75,11 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
 
     $result = drupal_http_request($uri, array('headers' => $headers));
     if (isset($result->error)) {
-      drupal_set_message(t($result->error), 'error');
+      $message = t(
+      	'Views XML Backend HTTP response: %error. URI: %uri',
+        array('%error' => $result->error, '%uri' => $uri)
+      );
+      drupal_set_message($message, 'error');
       return;
     }
     $cache_file_uri = "$destination/$cache_file";
@@ -109,6 +113,11 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
     $data = new stdClass();
     $data->contents = $this->fetch_file($this->options['xml_file']);
     drupal_alter('views_xml_backend_data', $data, $view->name);
+
+    // When content is empty, parsing it is pointless.
+    if (empty($data->contents)) {
+      return;
+    }
 
     $doc = new DOMDocument();
     $doc->loadXML($data->contents);
