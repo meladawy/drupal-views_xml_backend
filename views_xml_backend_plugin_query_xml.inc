@@ -27,11 +27,7 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
        */
       $filter_string =  '[' . implode(' and ', $filters) . ']';
     }
-    return $row_xpath . ($filter_string ? $filter_string : '');
-  }
-
-  function add_param($param, $value = '') {
-    $this->params[$param] = $value;
+    return $row_xpath . $filter_string;
   }
 
   /**
@@ -44,7 +40,7 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
     $this->pager->query();
 
     $view->build_info['query'] = $this->query();
-    $view->build_info['count_query'] = '';
+    $view->build_info['count_query'] = 'count(' . $view->build_info['query'] . ')';
     $view->build_info['query_args'] = array();
   }
 
@@ -101,7 +97,7 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
   }
 
   function execute(&$view) {
-    $start = microtime();
+    $start = microtime(TRUE);
 
     // Make sure that an xml file exists.
     // This could happen if you come from the add wizard to the actual views
@@ -123,12 +119,16 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
 
     $xpath = new DOMXPath($doc);
 
-    // Register namespaces.
+    // Create a simplexml object so that we can use
+    // SimpleXMLElement::getNamespaces(). Does anyone know a better way to do
+    // it?
     $simple = simplexml_import_dom($doc);
     if (!$simple) {
       return;
     }
     $namespaces = $simple->getNamespaces(TRUE);
+
+    // Register namespaces. Allow for overriding the default namespace.
     foreach ($namespaces as $prefix => $namespace) {
       if ($prefix === '') {
         if (empty($this->options['default_namespace'])) {
@@ -145,7 +145,7 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
       if ($this->pager->use_count_query() || !empty($view->get_total_rows)) {
         // $this->pager->execute_count_query($count_query);
         // Hackish execute_count_query implementation.
-        $this->pager->total_items = $xpath->evaluate('count(' . $view->build_info['query'] . ')');
+        $this->pager->total_items = $xpath->evaluate($view->build_info['count_query']);
         if (!empty($this->pager->options['offset'])) {
           $this->pager->total_items -= $this->pager->options['offset'];
         }
@@ -154,30 +154,34 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
       }
 
       // Let the pager modify the query to add limits.
-      //$this->pager->pre_execute($query);
+      $this->pager->pre_execute($query);
 
       if (!empty($this->limit) || !empty($this->offset)) {
-        // We can't have an offset without a limit, so provide a very large limit instead.
-        $limit  = intval(!empty($this->limit) ? $this->limit : 999999);
         $offset = intval(!empty($this->offset) ? $this->offset : 0);
-        $limit += $offset;
-        $view->build_info['query'] .= "[position() > $offset and not(position() > $limit)]";
+        if (!empty($this->limit)) {
+          $limit  = intval($this->limit) + $offset;
+          $view->build_info['query'] .= "[position() > $offset and not(position() > $limit)]";
+        }
+        else {
+          $view->build_info['query'] .= "[position() > $offset]";
+        }
       }
 
+      // Get the rows.
       $rows = $xpath->query($view->build_info['query']);
       $result = array();
       foreach ($rows as $row) {
         $item = array();
+
+        // Query each field per row.
         foreach ($this->fields as $field) {
           $node_list = $xpath->evaluate($field['field'], $row);
           if ($node_list) {
             // Allow multiple values in a field.
             if ($field['multiple']) {
-              $values = array();
               foreach ($node_list as $node) {
-                $values[] = $node->nodeValue;
+                $item[$field['field']][] = $node->nodeValue;
               }
-              $item[$field['field']] = $values;
             }
             // Single value, just pull the first.
             else {
@@ -186,19 +190,18 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
           }
         }
         $result[] = $item;
+
       }
       if (!empty($this->orderby)) {
-        // Array reverse, because the most specific are first - PHP works the
-        // opposite way of SQL.
+        // Array reverse, because the most specific are first.
         foreach (array_reverse($this->orderby) as $orderby) {
-          _views_xml_backend_sort_field($orderby['field'], $orderby['order']);
-          uasort($result, '_views_xml_backend_sort');
+          $orderby->sort($result);
         }
       }
       $view->result = $result;
       $view->total_rows = count($result);
 
-      $view->execute_time = microtime() - $start;
+      $view->execute_time = microtime(TRUE) - $start;
 
       $this->pager->post_execute($view->result);
 
@@ -252,59 +255,26 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
   function add_field($table, $field, $alias = '', $params = array()) {
     $alias = $field;
 
-    // Create a field info array.
-    $field_info = array(
+    // Add field info array.
+    if (empty($this->fields[$field])) {
+      $this->fields[$field] = array(
       'field' => $field,
       'table' => $table,
-      'alias' => $field,
-    ) + $params;
-
-    if (empty($this->fields[$field])) {
-      $this->fields[$field] = $field_info;
+      'alias' => $alias,
+      ) + $params;
     }
 
     return $field;
   }
 
-  function add_orderby($table, $field, $order, $alias = '', $params = array()) {
-    $this->orderby[] = array(
-      'field' => $field,
-      'order' => $order,
-    );
+  function add_orderby($orderby) {
+
+    $this->add_field($orderby->table_alias, $orderby->options['xpath_selector'], '', $orderby->options);
+
+    $this->orderby[] = $orderby;
   }
 
   function add_filter($filter) {
     $this->filter[] = $filter;
-  }
-}
-
-function _views_xml_backend_sort_field($field = NULL, $direction = NULL) {
-  static $f;
-  if ($field) {
-    $f = array('field' => $field, 'direction' => strtolower($direction));
-  }
-  return $f;
-}
-
-function _views_xml_backend_sort($a, $b) {
-  $sort = _views_xml_backend_sort_field();
-  $field = $sort['field'];
-  $a_weight = isset($a[$field]) ? $a[$field] : 0;
-  $b_weight = isset($b[$field]) ? $b[$field] : 0;
-  if ($a_weight == $b_weight) {
-    return 0;
-  }
-  if ($sort['direction'] === 'asc') {
-    return ($a_weight < $b_weight) ? -1 : 1;
-  }
-  else {
-    return ($a_weight > $b_weight) ? -1 : 1;
-  }
-}
-
-class views_xml_backend_count_query {
-  public function __construct($query, $data) {
-    $this->query = $query;
-    $this->data = $data;
   }
 }

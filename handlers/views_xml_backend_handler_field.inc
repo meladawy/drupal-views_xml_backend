@@ -9,7 +9,7 @@ class views_xml_backend_handler_field extends views_handler_field {
     $values = $values[$this->field_alias];
     if ($this->options['multiple']) {
       foreach ($values as $i => $value) {
-        $values[$i] = check_plain($value);
+        $values[$i] = $this->render_field($value);
       }
       if ($this->options['list_type'] == 'other') {
         return implode(check_plain($this->options['custom_separator']), $values);
@@ -19,10 +19,14 @@ class views_xml_backend_handler_field extends views_handler_field {
       }
       return theme('item_list', array(
         'items' => $values,
-        'type' => $this->options['list_type']
+        'type' => $this->options['list_type'],
       ));
     }
-    return check_plain($values);
+    return $this->render_field($values);
+  }
+
+  function render_field($value) {
+    return check_plain($value);
   }
 
   function option_definition() {

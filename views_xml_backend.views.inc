@@ -52,13 +52,13 @@ function views_xml_backend_views_data() {
     //),
   );
 
-  //$data['xml']['markup'] = array(
-  //  'title' => t('Markup'),
-  //  'help' => t('HTML markup in the XML file.'),
-  //  'field' => array(
-  //    'handler' => 'views_xml_backend_handler_field_markup',
-  //  ),
-  //);
+  $data['xml']['markup'] = array(
+    'title' => t('Markup'),
+    'help' => t('HTML markup in the XML file.'),
+    'field' => array(
+      'handler' => 'views_xml_backend_handler_field_markup',
+    ),
+  );
 
   return $data;
 }

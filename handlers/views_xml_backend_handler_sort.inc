@@ -13,18 +13,12 @@ class views_xml_backend_handler_sort extends views_handler_sort {
 
   function options_form(&$form, &$form_state) {
     parent::options_form($form, $form_state);
-    // Get a list of the available fields and arguments for token replacement.
-    $options = array();
-    foreach ($this->view->display_handler->get_handlers('field') as $field => $handler) {
-      $options[$handler->options['xpath_selector']] = $handler->ui_name();
-    }
     $form['xpath_selector'] = array(
-      '#type' => 'select',
+      '#type' => 'textfield',
       '#title' => t('Field'),
       '#description' => t('The field name in the table that will be used as the filter.'),
       '#default_value' => $this->options['xpath_selector'],
       '#required' => TRUE,
-      '#options' => $options,
     );
   }
 
@@ -32,7 +26,29 @@ class views_xml_backend_handler_sort extends views_handler_sort {
    * Called to add the sort to a query.
    */
   function query() {
-    $this->query->add_orderby($this->table_alias, $this->options['xpath_selector'], $this->options['order']);
+    $this->query->add_orderby($this);
+  }
+
+  function sort(&$result) {
+    $this->field = $this->options['xpath_selector'];
+    if (strtolower($this->options['order']) == 'asc') {
+      usort($result, array($this, 'sort_asc'));
+    }
+    else {
+      usort($result, array($this, 'sort_desc'));
+    }
+  }
+
+  function sort_asc($a, $b) {
+    $a_value = isset($a[$this->field]) ? $a[$this->field] : '';
+    $b_value = isset($b[$this->field]) ? $b[$this->field] : '';
+    return strcasecmp($a_value, $b_value);
+  }
+
+  function sort_desc($a, $b) {
+    $a_value = isset($a[$this->field]) ? $a[$this->field] : '';
+    $b_value = isset($b[$this->field]) ? $b[$this->field] : '';
+    return -strcasecmp($a_value, $b_value);
   }
 
   function ui_name($short = FALSE) {

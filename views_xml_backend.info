@@ -7,7 +7,6 @@ core = 7.x
 files[] = views_xml_backend_plugin_query_xml.inc
 ; Handlers
 files[] = handlers/views_xml_backend_handler_field.inc
-files[] = handlers/views_xml_backend_handler_field_numeric.inc
 files[] = handlers/views_xml_backend_handler_field_markup.inc
 files[] = handlers/views_xml_backend_handler_filter.inc
 files[] = handlers/views_xml_backend_handler_filter_numeric.inc
