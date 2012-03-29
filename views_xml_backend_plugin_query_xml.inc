@@ -244,6 +244,7 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
       '#title' => t('XML File'),
       '#default_value' => $this->options['xml_file'],
       '#description' => t("The URL or path to the XML file."),
+      '#maxlength' => 1024,
     );
     $form['row_xpath'] = array(
       '#type' => 'textfield',
