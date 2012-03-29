@@ -287,4 +287,18 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
   function add_filter($filter) {
     $this->filter[] = $filter;
   }
+
+  /**
+   * Return info to base the uniqueness of the result on.
+   *
+   * @return $cache_info
+   *   Array with query unique data.
+   */
+  function get_cache_info() {
+    return array(
+      'xml_file' => $this->options['xml_file'],
+      'row_xpath' => $this->options['row_xpath'],
+      'default_namespace' => $this->options['default_namespace']
+    );
+  }
 }
