@@ -153,6 +153,7 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
     try {
       if ($this->pager->use_count_query() || !empty($view->get_total_rows)) {
         // $this->pager->execute_count_query($count_query);
+
         // Hackish execute_count_query implementation.
         $this->pager->total_items = $xpath->evaluate($view->build_info['count_query']);
         if (!empty($this->pager->options['offset'])) {
@@ -188,6 +189,8 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
           if ($node_list) {
             // Allow multiple values in a field.
             if ($field['multiple']) {
+
+              $item[$field['field']] = array();
               foreach ($node_list as $node) {
                 $item[$field['field']][] = $node->nodeValue;
               }
@@ -196,6 +199,9 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
             else {
               $item[$field['field']] = $node_list->item(0)->nodeValue;
             }
+          }
+          else {
+            $item[$field['field']] = NULL;
           }
         }
         $result[] = $item;
