@@ -263,7 +263,7 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
       '#type' => 'textfield',
       '#title' => t('Default namespace'),
       '#default_value' => $this->options['default_namespace'],
-      '#description' => t("If the xml contains a default namespace, it will accessible as 'default:element'. If you want something different, declare it here."),
+      '#description' => t("If the xml contains a default namespace, it will be accessible as 'default:element'. If you want something different, declare it here."),
       '#required' => FALSE,
     );
   }
