@@ -228,7 +228,7 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
         drupal_set_message($e->getMessage(), 'error');
       }
       else {
-        debug('Exception: ' . $e->getMessage());
+        debug($e->getMessage(), 'Views XML Backend');
       }
     }
   }
