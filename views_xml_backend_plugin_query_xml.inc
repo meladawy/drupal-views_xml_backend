@@ -119,6 +119,12 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
       return;
     }
 
+    $use = $this->errorStart();
+    $this->parse($view, $data);
+    $this->errorStop($use, $this->options['show_errors']);
+  }
+
+  function parse(&$view, $data) {
     $doc = new DOMDocument();
     $doc->loadXML($data->contents);
     // If the file fails to load, bail.
@@ -240,6 +246,7 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
     $options['xml_file'] = array('default' => '');
     $options['row_xpath'] = array('default' => '');
     $options['default_namespace'] = array('default' => '');
+    $options['show_errors'] = array('default' => TRUE);
 
     return $options;
   }
@@ -264,6 +271,13 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
       '#title' => t('Default namespace'),
       '#default_value' => $this->options['default_namespace'],
       '#description' => t("If the xml contains a default namespace, it will be accessible as 'default:element'. If you want something different, declare it here."),
+      '#required' => FALSE,
+    );
+    $form['show_errors'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Show XML errors'),
+      '#default_value' => $this->options['show_errors'],
+      '#description' => t('If there were any errors during XML parsing, display them. It is recommended to leave this on during development.'),
       '#required' => FALSE,
     );
   }
@@ -306,5 +320,44 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
       'row_xpath' => $this->options['row_xpath'],
       'default_namespace' => $this->options['default_namespace']
     );
+  }
+
+  /**
+   * Start custom error handling.
+   *
+   * @return bool
+   *   The previous value of use_errors.
+   */
+  protected function errorStart() {
+    return libxml_use_internal_errors(TRUE);
+  }
+
+  /**
+   * Stop custom error handling.
+   *
+   * @param bool $use
+   *   The previous value of use_errors.
+   * @param bool $print
+   *   (Optional) Whether to print errors to the screen. Defaults to TRUE.
+   */
+  protected function errorStop($use, $print = TRUE) {
+    if ($print) {
+      foreach (libxml_get_errors() as $error) {
+        switch ($error->level) {
+          case LIBXML_ERR_WARNING:
+          case LIBXML_ERR_ERROR:
+            $type = 'warning';
+            break;
+          case LIBXML_ERR_FATAL:
+            $type = 'error';
+            break;
+
+        }
+        $message = t('Views XML Backend: %error on line %num. Error code: %code', array('%error' => trim($error->message), '%num' => $error->line, '%code' => $error->code));
+        drupal_set_message($message, $type, FALSE);
+      }
+    }
+    libxml_clear_errors();
+    libxml_use_internal_errors($use);
   }
 }
