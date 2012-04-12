@@ -40,14 +40,14 @@ class views_xml_backend_handler_sort extends views_handler_sort {
   }
 
   function sort_asc($a, $b) {
-    $a_value = isset($a[$this->field]) ? $a[$this->field] : '';
-    $b_value = isset($b[$this->field]) ? $b[$this->field] : '';
+    $a_value = isset($a->{$this->field}) ? $a->{$this->field} : '';
+    $b_value = isset($b->{$this->field}) ? $b->{$this->field} : '';
     return strcasecmp($a_value, $b_value);
   }
 
   function sort_desc($a, $b) {
-    $a_value = isset($a[$this->field]) ? $a[$this->field] : '';
-    $b_value = isset($b[$this->field]) ? $b[$this->field] : '';
+    $a_value = isset($a->{$this->field}) ? $a->{$this->field} : '';
+    $b_value = isset($b->{$this->field}) ? $b->{$this->field} : '';
     return -strcasecmp($a_value, $b_value);
   }
 

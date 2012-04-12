@@ -6,7 +6,7 @@
 
 class views_xml_backend_handler_field extends views_handler_field {
   function render($values) {
-    $values = $values[$this->field_alias];
+    $values = $values->{$this->field_alias};
     if ($this->options['multiple']) {
       foreach ($values as $i => $value) {
         $values[$i] = $this->render_field($value);

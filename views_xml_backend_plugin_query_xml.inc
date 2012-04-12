@@ -1,9 +1,9 @@
 <?php
+
 /**
  * @file
  * Query plugin for views_xml_backend.
  */
-
 class views_xml_backend_plugin_query_xml extends views_plugin_query {
 
   /**
@@ -49,15 +49,14 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
     // Check for local file.
     if (empty($parsed['host'])) {
       if (!file_exists($uri)) {
-        drupal_set_message(t('Views XML Backend: Local file not found.'), 'error');
-        return;
+        throw new Exception(t('Local file not found.'));
       }
       return file_get_contents($uri);
     }
 
     $destination = 'public://views_xml_backend';
     if (!file_prepare_directory($destination, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS)) {
-      throw new Exception(t('Views XML Backend directory either cannot be created or is not writable.'));
+      throw new Exception(t('Files directory either cannot be created or is not writable.'));
     }
 
     $headers = array();
@@ -76,11 +75,10 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
     $result = drupal_http_request($uri, array('headers' => $headers));
     if (isset($result->error)) {
       $message = t(
-      	'Views XML Backend HTTP response: %error. URI: %uri',
+      	'HTTP response: %error. URI: %uri',
         array('%error' => $result->error, '%uri' => $uri)
       );
-      drupal_set_message($message, 'error');
-      return;
+      throw new Exception($message);
     }
     $cache_file_uri = "$destination/$cache_file";
 
@@ -103,6 +101,10 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
   function execute(&$view) {
     $start = microtime(TRUE);
 
+    // Avoid notices about $view->execute_time being undefined if the query
+    // doesn't finish.
+    $view->execute_time = NULL;
+
     // Make sure that an xml file exists.
     // This could happen if you come from the add wizard to the actual views
     // edit page.
@@ -111,32 +113,51 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
     }
 
     $data = new stdClass();
-    $data->contents = $this->fetch_file($this->options['xml_file']);
+    try {
+      $data->contents = $this->fetch_file($this->options['xml_file']);
+    }
+    catch (Exception $e) {
+      drupal_set_message('Views XML Backend: ' . $e->getMessage(), 'error');
+      return;
+    }
+
+    // Allow other modules to alter the data. Could be used for adding Tidy
+    // support.
+    // @todo Document this.
     drupal_alter('views_xml_backend_data', $data, $view->name);
 
     // When content is empty, parsing it is pointless.
-    if (empty($data->contents)) {
+    if (!$data->contents) {
+      if ($this->options['show_errors']) {
+        drupal_set_message(t('Views XML Backend: File is empty.'), 'warning');
+      }
       return;
     }
 
     $use = $this->errorStart();
+
+    // Go!
     $this->parse($view, $data);
+
+    $view->execute_time = microtime(TRUE) - $start;
     $this->errorStop($use, $this->options['show_errors']);
   }
 
   function parse(&$view, $data) {
+
     $doc = new DOMDocument();
-    $doc->loadXML($data->contents);
-    // If the file fails to load, bail.
-    if (!$doc) {
+    $success = $doc->loadXML($data->contents);
+    // If the file fails to load, bail. The appropriate error messages will be
+    // displayed automatically.
+    if (!$success) {
       return;
     }
 
     $xpath = new DOMXPath($doc);
 
     // Create a simplexml object so that we can use
-    // SimpleXMLElement::getNamespaces(). Does anyone know a better way to do
-    // it?
+    // SimpleXMLElement::getNamespaces().
+    // Does anyone know a better way to do it?
     $simple = simplexml_import_dom($doc);
     if (!$simple) {
       return;
@@ -185,9 +206,10 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
 
       // Get the rows.
       $rows = $xpath->query($view->build_info['query']);
+
       $result = array();
       foreach ($rows as $row) {
-        $item = array();
+        $item = new stdClass();
 
         // Query each field per row.
         foreach ($this->fields as $field) {
@@ -196,18 +218,20 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
             // Allow multiple values in a field.
             if ($field['multiple']) {
 
-              $item[$field['field']] = array();
+              $item->{$field['field']} = array();
               foreach ($node_list as $node) {
-                $item[$field['field']][] = $node->nodeValue;
+                $item->{$field['field']}[] = $node->nodeValue;
               }
             }
             // Single value, just pull the first.
             else {
-              $item[$field['field']] = $node_list->item(0)->nodeValue;
+              $item->{$field['field']} = $node_list->item(0)->nodeValue;
             }
           }
           else {
-            $item[$field['field']] = NULL;
+            // Make sure all of the fields are set. Allows us to do less error
+            // checking later on.
+            $item->{$field['field']} = NULL;
           }
         }
         $result[] = $item;
@@ -222,10 +246,7 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
       $view->result = $result;
       $view->total_rows = count($result);
 
-      $view->execute_time = microtime(TRUE) - $start;
-
       $this->pager->post_execute($view->result);
-
     }
     catch (Exception $e) {
       $view->result = array();
