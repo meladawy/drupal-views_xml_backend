@@ -44,9 +44,9 @@ function views_xml_backend_views_data() {
     'filter' => array(
       'handler' => 'views_xml_backend_handler_filter_numeric',
     ),
-    //'sort' => array(
-    //  'handler' => 'views_xml_backend_handler_sort',
-    //),
+    'sort' => array(
+      'handler' => 'views_xml_backend_handler_sort_numeric',
+    ),
     //'argument' => array(
     //  'handler' => 'views_xml_backend_handler_argument',
     //),
