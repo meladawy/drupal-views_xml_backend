@@ -213,25 +213,26 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
 
         // Query each field per row.
         foreach ($this->fields as $field) {
-          $node_list = $xpath->evaluate($field['field'], $row);
+          $field_key = $field['field'];
+          $node_list = $xpath->evaluate($field_key, $row);
           if ($node_list) {
             // Allow multiple values in a field.
             if ($field['multiple']) {
 
-              $item->{$field['field']} = array();
+              $item->$field_key = array();
               foreach ($node_list as $node) {
-                $item->{$field['field']}[] = $node->nodeValue;
+                $item->{$field_key}[] = $node->nodeValue;
               }
             }
             // Single value, just pull the first.
             else {
-              $item->{$field['field']} = $node_list->item(0)->nodeValue;
+              $item->$field_key = $node_list->item(0)->nodeValue;
             }
           }
           else {
             // Make sure all of the fields are set. Allows us to do less error
             // checking later on.
-            $item->{$field['field']} = NULL;
+            $item->$field_key = NULL;
           }
         }
         $result[] = $item;
