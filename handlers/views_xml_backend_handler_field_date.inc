@@ -1,7 +1,9 @@
 <?php
 /**
+ * @file
  * A handler to provide proper displays for dates.
  */
+
 class views_xml_backend_handler_field_date extends views_xml_backend_handler_field {
   function option_definition() {
     $options = parent::option_definition();
@@ -72,7 +74,7 @@ class views_xml_backend_handler_field_date extends views_xml_backend_handler_fie
           return t(($time_diff < 0 ? '%time hence' : '%time ago'), array('%time' => format_interval(abs($time_diff), is_numeric($custom_format) ? $custom_format : 2)));
         case 'custom':
           if ($custom_format == 'r') {
-            return format_date($value, $format, $custom_format, null, 'en');
+            return format_date($value, $format, $custom_format, NULL, 'en');
           }
           return format_date($value, $format, $custom_format);
         default:

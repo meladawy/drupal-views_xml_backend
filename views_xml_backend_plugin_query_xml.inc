@@ -74,10 +74,8 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
 
     $result = drupal_http_request($uri, array('headers' => $headers));
     if (isset($result->error)) {
-      $message = t(
-      	'HTTP response: %error. URI: %uri',
-        array('%error' => $result->error, '%uri' => $uri)
-      );
+      $args = array('%error' => $result->error, '%uri' => $uri);
+      $message = t('HTTP response: %error. URI: %uri', $args);
       throw new Exception($message);
     }
     $cache_file_uri = "$destination/$cache_file";
@@ -117,7 +115,7 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
       $data->contents = $this->fetch_file($this->options['xml_file']);
     }
     catch (Exception $e) {
-      drupal_set_message('Views XML Backend: ' . $e->getMessage(), 'error');
+      drupal_set_message(t('Views XML Backend: ' . $e->getMessage()), 'error');
       return;
     }
 
@@ -194,7 +192,7 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
       $this->pager->pre_execute($query);
 
       if (!empty($this->limit) || !empty($this->offset)) {
-        $view->build_info['query'] = "(" . $view->build_info['query'] . ")";
+        $view->build_info['query'] = '(' . $view->build_info['query'] . ')';
         $offset = intval(!empty($this->offset) ? $this->offset : 0);
         if (!empty($this->limit)) {
           $limit  = intval($this->limit) + $offset;
@@ -215,9 +213,9 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
         // Query each field per row.
         foreach ($this->fields as $field) {
           $field_key = $field['field'];
-	  if (!$field_key) {
-	    continue;
-	  }
+          if (!$field_key) {
+            continue;
+          }
           $node_list = $xpath->evaluate($field_key, $row);
           if ($node_list) {
             // Allow multiple values in a field.

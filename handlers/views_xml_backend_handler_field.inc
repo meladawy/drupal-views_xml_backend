@@ -71,7 +71,7 @@ class views_xml_backend_handler_field extends views_handler_field {
       '#options' => array(
         'ul' => t('Unordered list'),
         'ol' => t('Ordered list'),
-        'br' => check_plain('<br>'),
+        'br' => check_plain('<br />'),
         'other' => t('Custom separator'),
       ),
       '#fieldset' => 'list_options',
