@@ -194,6 +194,7 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
       $this->pager->pre_execute($query);
 
       if (!empty($this->limit) || !empty($this->offset)) {
+        $view->build_info['query'] = "(" . $view->build_info['query'] . ")";
         $offset = intval(!empty($this->offset) ? $this->offset : 0);
         if (!empty($this->limit)) {
           $limit  = intval($this->limit) + $offset;
@@ -214,6 +215,9 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
         // Query each field per row.
         foreach ($this->fields as $field) {
           $field_key = $field['field'];
+	  if (!$field_key) {
+	    continue;
+	  }
           $node_list = $xpath->evaluate($field_key, $row);
           if ($node_list) {
             // Allow multiple values in a field.
