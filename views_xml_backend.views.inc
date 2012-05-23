@@ -35,6 +35,18 @@ function views_xml_backend_views_data() {
     //),
   );
 
+  $data['xml']['date'] = array(
+    'title' => t('Date'),
+    'help' => t('Date in the XML file.'),
+    'field' => array(
+      'handler' => 'views_xml_backend_handler_field_date',
+      'click sortable' => FALSE,
+    ),
+    //'argument' => array(
+    //  'handler' => 'views_xml_backend_handler_argument',
+    //),
+  );
+
   $data['xml']['numeric'] = array(
     'title' => t('Numeric'),
     'help' => t('A number in the XML file.'),
