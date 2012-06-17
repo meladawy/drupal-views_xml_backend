@@ -189,7 +189,7 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
       }
 
       // Let the pager modify the query to add limits.
-      $this->pager->pre_execute($query);
+      $this->pager->pre_execute($view->build_info['query']);
 
       if (!empty($this->limit) || !empty($this->offset)) {
         $view->build_info['query'] = '(' . $view->build_info['query'] . ')';
