@@ -26,7 +26,7 @@ class views_xml_backend_handler_field extends views_handler_field {
   }
 
   function render_field($value) {
-    return check_plain($value);
+    return check_plain(decode_entities($value));
   }
 
   function option_definition() {
