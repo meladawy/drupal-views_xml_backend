@@ -229,6 +229,9 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
       // Let the pager modify the query to add limits.
       $this->pager->pre_execute($view->build_info['query']);
 
+      // Used to keep track of query misses when previewing.
+      $in_preview = !empty($view->live_preview);
+
       // Get the rows.
       $rows = $xpath->query($view->build_info['query']);
 
@@ -265,11 +268,30 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
             // Make sure all of the fields are set. Allows us to do less error
             // checking later on.
             $item->$field_key = NULL;
+
+            // Track empty results during preview for later assistance.
+            if ($in_preview) {
+              if (!isset($duds[$field_key])) {
+                $duds[$field_key] = 0;
+              }
+              $duds[$field_key]++;
+            }
           }
         }
         $result[] = $item;
-
       }
+
+      // Give some feedback if we are previewing and a field is not returning
+      // any values.
+      if ($in_preview) {
+        $count = count($result);
+        foreach ($duds as $field_key => $empty_count) {
+          if ($count == $empty_count) {
+            drupal_set_message(t('Field %field never returned a valid result.', array('%field' => $field_key)), 'warning');
+          }
+        }
+      }
+
       if (!empty($this->orderby)) {
         // Array reverse, because the most specific are first.
         foreach (array_reverse($this->orderby) as $orderby) {
@@ -417,7 +439,7 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
             break;
 
         }
-        $message = t('Views XML Backend: %error on line %num. Error code: %code', array('%error' => trim($error->message), '%num' => $error->line, '%code' => $error->code));
+        $message = t('%error on line %num. Error code: %code', array('%error' => trim($error->message), '%num' => $error->line, '%code' => $error->code));
         drupal_set_message($message, $type, FALSE);
       }
     }
