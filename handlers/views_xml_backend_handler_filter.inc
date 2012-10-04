@@ -143,7 +143,7 @@ class views_xml_backend_handler_filter extends views_handler_filter_string {
   function generate() {
     $operator = $this->options['expose'] ? $this->operator : $this->options['operator'];
     $xpath = $this->options['xpath_selector'];
-    $value = $this->options['expose'] ? $this->value : $this->options['value'];
+    $value = $this->value;
 
     // Awesome string escape.
     $value = '"' . str_replace('"', '\"', $value) . '"';

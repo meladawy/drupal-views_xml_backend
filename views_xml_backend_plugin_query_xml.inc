@@ -191,18 +191,6 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
       // Let the pager modify the query to add limits.
       $this->pager->pre_execute($view->build_info['query']);
 
-      if (!empty($this->limit) || !empty($this->offset)) {
-        $view->build_info['query'] = '(' . $view->build_info['query'] . ')';
-        $offset = intval(!empty($this->offset) ? $this->offset : 0);
-        if (!empty($this->limit)) {
-          $limit  = intval($this->limit) + $offset;
-          $view->build_info['query'] .= "[position() > $offset and not(position() > $limit)]";
-        }
-        else {
-          $view->build_info['query'] .= "[position() > $offset]";
-        }
-      }
-
       // Get the rows.
       $rows = $xpath->query($view->build_info['query']);
 
@@ -249,6 +237,9 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
         foreach (array_reverse($this->orderby) as $orderby) {
           $orderby->sort($result);
         }
+      }
+      if (!empty($this->limit) || !empty($this->offset)) {
+        $result = array_slice($result, $this->offset, $this->limit, TRUE);
       }
       $view->result = $result;
       $view->total_rows = count($result);

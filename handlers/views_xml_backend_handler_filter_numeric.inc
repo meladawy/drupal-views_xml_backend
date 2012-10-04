@@ -39,7 +39,7 @@ class views_xml_backend_handler_filter_numeric extends views_handler_filter_nume
   }
 
   function generate() {
-    $operator = $this->options['operator'];
+    $operator = $this->options['expose'] ? $this->operator : $this->options['operator'];
     $xpath = $this->options['xpath_selector'];
 
     if ($operator == 'between') {

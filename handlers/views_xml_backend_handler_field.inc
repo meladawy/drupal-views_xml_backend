@@ -5,6 +5,7 @@
  */
 
 class views_xml_backend_handler_field extends views_handler_field {
+
   function render($values) {
     $values = $values->{$this->field_alias};
     if ($this->options['multiple']) {
@@ -130,7 +131,14 @@ class views_xml_backend_handler_field extends views_handler_field {
    */
   function click_sort($order) {
     if (isset($this->field_alias)) {
-      $this->query->add_orderby(NULL, $this->field_alias, $order);
+
+      // @todo: Determine type of sort handler based on field.
+      $sort  = new views_xml_backend_handler_sort();
+
+      // Re-use the field options as options for the sort handler.
+      $options = $this->options + array('order' => $order);
+      $sort->init($this->view, $options);
+      $this->query->add_orderby($sort);
     }
   }
 }
