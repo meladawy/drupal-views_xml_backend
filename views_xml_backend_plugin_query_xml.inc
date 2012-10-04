@@ -19,14 +19,19 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
     $filter_string = '';
     if (!empty($this->filter)) {
       $filters = array();
-      foreach ($this->filter as $filter) {
-        $filters[] = $filter->generate();
+
+      foreach ($this->filter as $group_id => $group) {
+
+        // $group is an array of views_xml_backend_handler_filter()'s. They
+        // implement __toString(), so imploding calls their generate method.
+        $op = strtolower($this->where[$group_id]['type']);
+        $filters[] = '(' . implode(" $op ", $group) . ')';
       }
-      /**
-       * @todo Add an option for the filters to be 'and' or 'or'.
-       */
-      $filter_string =  '[' . implode(' and ', $filters) . ']';
+
+      $op = strtolower($this->group_operator);
+      $filter_string =  '[' . implode(" $op ", $filters) . ']';
     }
+
     return $row_xpath . $filter_string;
   }
 
@@ -326,7 +331,7 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
   }
 
   function add_filter($filter) {
-    $this->filter[] = $filter;
+    $this->filter[$filter->options['group']][] = $filter;
   }
 
   /**

@@ -8,6 +8,10 @@ class views_xml_backend_handler_filter extends views_handler_filter_string {
   // exposed filter options
   var $no_single = TRUE;
 
+  function __toString() {
+    return $this->generate();
+  }
+
   function option_definition() {
     $options = parent::option_definition();
 

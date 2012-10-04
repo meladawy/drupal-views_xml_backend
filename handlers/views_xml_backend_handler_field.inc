@@ -7,6 +7,9 @@
 class views_xml_backend_handler_field extends views_handler_field {
 
   function render($values) {
+    if (!isset($values->{$this->field_alias})) {
+      return;
+    }
     $values = $values->{$this->field_alias};
     if ($this->options['multiple']) {
       foreach ($values as $i => $value) {
@@ -106,8 +109,6 @@ class views_xml_backend_handler_field extends views_handler_field {
       $this->options
     );
   }
-
-
 
   function ui_name($short = FALSE) {
     if (!empty($this->options['ui_name'])) {
