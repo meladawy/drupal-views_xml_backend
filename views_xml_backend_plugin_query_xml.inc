@@ -7,6 +7,20 @@
 class views_xml_backend_plugin_query_xml extends views_plugin_query {
 
   /**
+   * Document and initialize the attributes we use.
+   */
+  public $filter = array();
+  public $argument = array();
+  public $orderby = array();
+  public $where = array();
+  public $fields = array();
+  public $options = array();
+  public $group_operator = 'AND';
+  public $pager;
+  public $limit;
+  public $offset;
+
+  /**
    * Generates a query and a countquery from all of the information supplied to
    * the object.
    *

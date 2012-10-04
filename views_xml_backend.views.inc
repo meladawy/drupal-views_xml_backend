@@ -48,11 +48,11 @@ function views_xml_backend_views_data() {
     'help' => t('Date in the XML file.'),
     'field' => array(
       'handler' => 'views_xml_backend_handler_field_date',
-      'click sortable' => FALSE,
+      'click sortable' => TRUE,
     ),
-    //'argument' => array(
-    //  'handler' => 'views_xml_backend_handler_argument',
-    //),
+    'sort' => array(
+      'handler' => 'views_xml_backend_handler_sort_date',
+    ),
   );
 
   $data['xml']['numeric'] = array(

@@ -15,4 +15,5 @@ files[] = handlers/views_xml_backend_handler_field_date.inc
 files[] = handlers/views_xml_backend_handler_filter.inc
 files[] = handlers/views_xml_backend_handler_filter_numeric.inc
 files[] = handlers/views_xml_backend_handler_sort.inc
+files[] = handlers/views_xml_backend_handler_sort_date.inc
 files[] = handlers/views_xml_backend_handler_sort_numeric.inc

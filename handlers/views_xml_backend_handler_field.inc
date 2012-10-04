@@ -133,8 +133,16 @@ class views_xml_backend_handler_field extends views_handler_field {
   function click_sort($order) {
     if (isset($this->field_alias)) {
 
-      // @todo: Determine type of sort handler based on field.
-      $sort  = new views_xml_backend_handler_sort();
+      // @todo: Figure out a better way to do this. ewww.
+      if ($this->field == 'date') {
+        $sort  = new views_xml_backend_handler_sort_date();
+      }
+      else if ($this->field == 'numeric') {
+        $sort  = new views_xml_backend_handler_sort_numeric();
+      }
+      else {
+        $sort  = new views_xml_backend_handler_sort();
+      }
 
       // Re-use the field options as options for the sort handler.
       $options = $this->options + array('order' => $order);
