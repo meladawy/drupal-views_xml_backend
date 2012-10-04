@@ -17,6 +17,14 @@ function views_xml_backend_views_data() {
     'query class' => 'views_xml_backend',
   );
 
+  $data['xml']['passthru'] = array(
+    'title' => t('Pass through'),
+    'help' => t('This argument handler does not filter any values. It can be used to pass in values from an argument into token replacements.'),
+    'argument' => array(
+     'handler' => 'views_xml_backend_handler_argument_passthrough',
+    ),
+  );
+
   $data['xml']['text'] = array(
     'title' => t('Text'),
     'help' => t('Text in the XML file.'),

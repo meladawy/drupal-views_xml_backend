@@ -2,16 +2,17 @@
 
 /**
  * @file
- * Query plugin for views_xml_backend.
+ * Query plugin for views_xml_backend.module.
  */
 class views_xml_backend_plugin_query_xml extends views_plugin_query {
 
   /**
-   * Generate a query and a countquery from all of the information supplied to
+   * Generates a query and a countquery from all of the information supplied to
    * the object.
    *
-   * @param $get_count
-   *   Provide a countquery if this is true, otherwise provide a normal query.
+   * @param bool $get_count
+   *   (Optional) Provide a countquery if this is true, otherwise provide a
+   *   normal query. Defaults to FALSE.
    */
   function query($get_count = FALSE) {
     $row_xpath = $this->options['row_xpath'];
@@ -22,11 +23,12 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
       foreach ($this->filter as $group_id => $group) {
 
         // $group is an array of views_xml_backend_handler_filter()'s. They
-        // implement __toString(), so imploding calls their generate method.
+        // implement __toString(), so imploding calls their generate() method.
         if (count($group) == 1) {
           $filters[] = reset($group);
         }
         else {
+          // Type could be 'AND' or 'OR'.
           $op = strtolower($this->where[$group_id]['type']);
           $filters[] = '(' . implode(" $op ", $group) . ')';
         }
@@ -116,16 +118,18 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
     // doesn't finish.
     $view->execute_time = NULL;
 
-    // Make sure that an xml file exists.
-    // This could happen if you come from the add wizard to the actual views
-    // edit page.
+    // Make sure that an xml file exists. This could happen if you come from the
+    // add wizard to the actual views edit page.
     if (empty($this->options['xml_file'])) {
       return FALSE;
     }
 
     $data = new stdClass();
     try {
-      $data->contents = $this->fetch_file($this->options['xml_file']);
+      // Do token replacement. At this point, only argument values are
+      // available.
+      $path = $this->replace_arguments($view, $this->options['xml_file']);
+      $data->contents = $this->fetch_file($path);
     }
     catch (Exception $e) {
       drupal_set_message(t('Views XML Backend: ' . $e->getMessage()), 'error');
@@ -154,6 +158,13 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
     $this->errorStop($use, $this->options['show_errors']);
   }
 
+  function replace_arguments($view, $string){
+    if (!empty($view->build_info['substitutions'])) {
+      return strtr($string, $view->build_info['substitutions']);
+    }
+    return $string;
+  }
+
   function parse(&$view, $data) {
 
     $doc = new DOMDocument();
@@ -168,7 +179,7 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
 
     // Create a simplexml object so that we can use
     // SimpleXMLElement::getNamespaces().
-    // Does anyone know a better way to do it?
+    // Does anyone know a better way to do this?
     $simple = simplexml_import_dom($doc);
     if (!$simple) {
       return;
@@ -293,14 +304,14 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
       '#type' => 'textfield',
       '#title' => t('XML File'),
       '#default_value' => $this->options['xml_file'],
-      '#description' => t("The URL or path to the XML file."),
+      '#description' => t('The URL or path to the XML file.'),
       '#maxlength' => 1024,
     );
     $form['row_xpath'] = array(
       '#type' => 'textfield',
       '#title' => t('Row Xpath'),
       '#default_value' => $this->options['row_xpath'],
-      '#description' => t("An xpath function that selects rows."),
+      '#description' => t('An xpath function that selects rows.'),
       '#required' => TRUE,
     );
     $form['default_namespace'] = array(
