@@ -16,23 +16,31 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
   function query($get_count = FALSE) {
     $row_xpath = $this->options['row_xpath'];
 
-    $filter_string = '';
-    if (!empty($this->filter)) {
+    if ($this->filter) {
       $filters = array();
 
       foreach ($this->filter as $group_id => $group) {
 
         // $group is an array of views_xml_backend_handler_filter()'s. They
         // implement __toString(), so imploding calls their generate method.
-        $op = strtolower($this->where[$group_id]['type']);
-        $filters[] = '(' . implode(" $op ", $group) . ')';
+        if (count($group) == 1) {
+          $filters[] = reset($group);
+        }
+        else {
+          $op = strtolower($this->where[$group_id]['type']);
+          $filters[] = '(' . implode(" $op ", $group) . ')';
+        }
       }
 
       $op = strtolower($this->group_operator);
-      $filter_string =  '[' . implode(" $op ", $filters) . ']';
+      $row_xpath .=  '[' . implode(" $op ", $filters) . ']';
     }
 
-    return $row_xpath . $filter_string;
+    if ($this->argument) {
+      $row_xpath .=  '[' . implode(' and ', $this->argument) . ']';
+    }
+
+    return $row_xpath;
   }
 
   /**
@@ -333,6 +341,11 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
   function add_filter($filter) {
     $this->filter[$filter->options['group']][] = $filter;
   }
+
+  function add_argument($argument) {
+    $this->argument[] = $argument;
+  }
+
 
   /**
    * Return info to base the uniqueness of the result on.

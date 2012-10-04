@@ -152,13 +152,13 @@ class views_xml_backend_handler_filter extends views_handler_filter_string {
     // Awesome string escape.
     $value = '"' . str_replace('"', '\"', $value) . '"';
     if ($operator == '=' || $operator == '!=') {
-      return $xpath . $operator . $value;
+      return "$xpath $operator $value";
     }
     if (strpos($operator, '!') === 0) {
       $operator = ltrim($operator, '!');
-      return "not($operator($xpath,$value))";
+      return "not($operator($xpath, $value))";
     }
-    return "$operator($xpath,$value)";
+    return "$operator($xpath, $value)";
   }
 
   function ui_name($short = FALSE) {

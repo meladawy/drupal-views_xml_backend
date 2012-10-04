@@ -30,9 +30,9 @@ function views_xml_backend_views_data() {
     'sort' => array(
       'handler' => 'views_xml_backend_handler_sort',
     ),
-    //'argument' => array(
-    //  'handler' => 'views_xml_backend_handler_argument',
-    //),
+    'argument' => array(
+     'handler' => 'views_xml_backend_handler_argument',
+    ),
   );
 
   $data['xml']['date'] = array(
@@ -59,9 +59,9 @@ function views_xml_backend_views_data() {
     'sort' => array(
       'handler' => 'views_xml_backend_handler_sort_numeric',
     ),
-    //'argument' => array(
-    //  'handler' => 'views_xml_backend_handler_argument',
-    //),
+    'argument' => array(
+     'handler' => 'views_xml_backend_handler_argument_numeric',
+    ),
   );
 
   $data['xml']['markup'] = array(
