@@ -235,7 +235,12 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
       if (!empty($this->orderby)) {
         // Array reverse, because the most specific are first.
         foreach (array_reverse($this->orderby) as $orderby) {
-          $orderby->sort($result);
+          if ($orderby == 'rand') {
+            shuffle($result);
+          }
+          else {
+            $orderby->sort($result);
+          }
         }
       }
       if (!empty($this->limit) || !empty($this->offset)) {
@@ -317,9 +322,6 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
   }
 
   function add_orderby($orderby) {
-
-    $this->add_field($orderby->table_alias, $orderby->options['xpath_selector'], '', $orderby->options);
-
     $this->orderby[] = $orderby;
   }
 

@@ -26,6 +26,7 @@ class views_xml_backend_handler_sort extends views_handler_sort {
    * Called to add the sort to a query.
    */
   function query() {
+    $this->query->add_field($this->table_alias, $this->options['xpath_selector'], '', $this->options);
     $this->query->add_orderby($this);
   }
 
