@@ -34,7 +34,7 @@ class views_xml_backend_handler_sort extends views_handler_sort {
     $this->field = $this->options['xpath_selector'];
 
     // Do not try to sort multiple-valued fields. Can we some how?
-    if ($this->options['multiple']) {
+    if (!empty($this->options['multiple'])) {
       return;
     }
     if (strtolower($this->options['order']) == 'asc') {
