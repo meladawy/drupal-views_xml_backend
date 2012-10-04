@@ -38,11 +38,53 @@ function views_xml_backend_views_default_views() {
   $handler->display->display_options['pager']['options']['expose']['items_per_page_options_all'] = 0;
   $handler->display->display_options['style_plugin'] = 'table';
   $handler->display->display_options['style_options']['columns'] = array(
+    'text_1' => 'text_1',
     'text' => 'text',
+    'text_2' => 'text_2',
+    'text_4' => 'text_4',
+    'text_3' => 'text_3',
+    'date' => 'date',
   );
   $handler->display->display_options['style_options']['default'] = '-1';
   $handler->display->display_options['style_options']['info'] = array(
+    'text_1' => array(
+      'sortable' => 1,
+      'default_sort_order' => 'asc',
+      'align' => '',
+      'separator' => '',
+      'empty_column' => 0,
+    ),
     'text' => array(
+      'sortable' => 1,
+      'default_sort_order' => 'asc',
+      'align' => '',
+      'separator' => '',
+      'empty_column' => 0,
+    ),
+    'text_2' => array(
+      'sortable' => 1,
+      'default_sort_order' => 'asc',
+      'align' => '',
+      'separator' => '',
+      'empty_column' => 0,
+    ),
+    'text_4' => array(
+      'sortable' => 1,
+      'default_sort_order' => 'asc',
+      'align' => '',
+      'separator' => '',
+      'empty_column' => 0,
+    ),
+    'text_3' => array(
+      'sortable' => 1,
+      'default_sort_order' => 'asc',
+      'align' => '',
+      'separator' => '',
+      'empty_column' => 0,
+    ),
+    'date' => array(
+      'sortable' => 1,
+      'default_sort_order' => 'asc',
       'align' => '',
       'separator' => '',
       'empty_column' => 0,
@@ -169,6 +211,31 @@ function views_xml_backend_views_default_views() {
   $handler->display->display_options['fields']['text_3']['hide_alter_empty'] = 1;
   $handler->display->display_options['fields']['text_3']['xpath_selector'] = 'terms/term/value';
   $handler->display->display_options['fields']['text_3']['multiple'] = 1;
+  /* Field: date: Date */
+  $handler->display->display_options['fields']['date']['id'] = 'date';
+  $handler->display->display_options['fields']['date']['table'] = 'xml';
+  $handler->display->display_options['fields']['date']['field'] = 'date';
+  $handler->display->display_options['fields']['date']['alter']['alter_text'] = 0;
+  $handler->display->display_options['fields']['date']['alter']['make_link'] = 0;
+  $handler->display->display_options['fields']['date']['alter']['absolute'] = 0;
+  $handler->display->display_options['fields']['date']['alter']['external'] = 0;
+  $handler->display->display_options['fields']['date']['alter']['replace_spaces'] = 0;
+  $handler->display->display_options['fields']['date']['alter']['trim_whitespace'] = 0;
+  $handler->display->display_options['fields']['date']['alter']['nl2br'] = 0;
+  $handler->display->display_options['fields']['date']['alter']['word_boundary'] = 1;
+  $handler->display->display_options['fields']['date']['alter']['ellipsis'] = 1;
+  $handler->display->display_options['fields']['date']['alter']['more_link'] = 0;
+  $handler->display->display_options['fields']['date']['alter']['strip_tags'] = 0;
+  $handler->display->display_options['fields']['date']['alter']['trim'] = 0;
+  $handler->display->display_options['fields']['date']['alter']['html'] = 0;
+  $handler->display->display_options['fields']['date']['element_label_colon'] = 1;
+  $handler->display->display_options['fields']['date']['element_default_classes'] = 1;
+  $handler->display->display_options['fields']['date']['hide_empty'] = 0;
+  $handler->display->display_options['fields']['date']['empty_zero'] = 0;
+  $handler->display->display_options['fields']['date']['hide_alter_empty'] = 1;
+  $handler->display->display_options['fields']['date']['xpath_selector'] = 'date';
+  $handler->display->display_options['fields']['date']['multiple'] = 0;
+  $handler->display->display_options['fields']['date']['date_format'] = 'time ago';
   /* Filter criterion: version_major: Numeric */
   $handler->display->display_options['filters']['numeric']['id'] = 'numeric';
   $handler->display->display_options['filters']['numeric']['table'] = 'xml';
