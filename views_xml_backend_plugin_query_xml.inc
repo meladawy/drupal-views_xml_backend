@@ -217,7 +217,11 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
             continue;
           }
           $node_list = $xpath->evaluate($field_key, $row);
-          if ($node_list) {
+
+          // It can happen that a field is not present, but the path is valid.
+          // In that case, the evaluate function returns an empty list.
+          if ($node_list && $node_list->length > 0) {
+
             // Allow multiple values in a field.
             if ($field['multiple']) {
 
