@@ -236,6 +236,8 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
       $rows = $xpath->query($view->build_info['query']);
 
       $result = array();
+      $duds = array();
+
       foreach ($rows as $row) {
         $item = new stdClass();
 
