@@ -146,6 +146,7 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
       $data->contents = $this->fetch_file($path);
     }
     catch (Exception $e) {
+      $cache = $view->display_handler->get_plugin('cache')->cache_flush();
       drupal_set_message(t('Views XML Backend: ' . $e->getMessage()), 'error');
       return;
     }
