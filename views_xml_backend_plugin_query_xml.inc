@@ -103,9 +103,11 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
 
     $result = drupal_http_request($uri, array('headers' => $headers));
     if (isset($result->error)) {
-      $args = array('%error' => $result->error, '%uri' => $uri);
-      $message = t('HTTP response: %error. URI: %uri', $args);
-      throw new Exception($message);
+      if ($this->options['show_errors']) {
+        $message = format_string('HTTP response: %error. URI: %uri', array('%error' => $result->error, '%uri' => $uri));
+        throw new Exception($message);
+      }
+      return;
     }
     $cache_file_uri = "$destination/$cache_file";
 
@@ -362,9 +364,9 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
     );
     $form['show_errors'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Show XML errors'),
+      '#title' => t('Show errors'),
       '#default_value' => $this->options['show_errors'],
-      '#description' => t('If there were any errors during XML parsing, display them. It is recommended to leave this on during development.'),
+      '#description' => t('If there were any errors during XML parsing or downloading the file, display them. It is recommended to leave this on during development.'),
       '#required' => FALSE,
     );
   }
