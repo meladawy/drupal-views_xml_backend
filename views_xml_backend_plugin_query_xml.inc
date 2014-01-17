@@ -183,12 +183,8 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
   }
 
   function parse(&$view, $data) {
-
-    $doc = new DOMDocument();
-    $success = $doc->loadXML($data->contents);
-    // If the file fails to load, bail. The appropriate error messages will be
-    // displayed automatically.
-    if (!$success) {
+    // The appropriate error messages will be displayed automatically.
+    if (!$doc = $this->get_dom_document($data->contents)) {
       return;
     }
 
@@ -326,6 +322,29 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
         debug($e->getMessage(), 'Views XML Backend');
       }
     }
+  }
+
+  /**
+   * Returns the DOM document to use for parsing.
+   *
+   * This is easily overridable so that subclasses can change the method of
+   * loading. For example, using DOMDocument::loadHTML(), or html5-php's
+   * HTML::loadHTML().
+   *
+   * @param string $content
+   *   The content to load in the DOM.
+   *
+   * @return DOMDocument|FALSE
+   *   A new DOM document, or FALSE on failure.
+   */
+  function get_dom_document($content) {
+    $doc = new DOMDocument();
+
+    if (!$success = $doc->loadXML($content)) {
+      return;
+    }
+
+    return $doc;
   }
 
   function add_signature(&$view) {}
