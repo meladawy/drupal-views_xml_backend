@@ -1,18 +1,27 @@
 <?php
+
 /**
  * @file
- * Base filter handler for views_xml_backend.
+ * Contains views_xml_backend_handler_filter.
  */
 
+/**
+ * Base filter handler for views_xml_backend.
+ */
 class views_xml_backend_handler_filter extends views_handler_filter_string {
-  // exposed filter options
-  var $no_single = TRUE;
 
-  function __toString() {
+  /**
+   * Exposed filter options.
+   *
+   * @var bool
+   */
+  public $no_single = TRUE;
+
+  public function __toString() {
     return $this->generate();
   }
 
-  function option_definition() {
+  public function option_definition() {
     $options = parent::option_definition();
 
     $options['case'] = array('default' => TRUE);
@@ -26,7 +35,7 @@ class views_xml_backend_handler_filter extends views_handler_filter_string {
    * to add or remove functionality by overriding this function and
    * adding/removing items from this array.
    */
-  function operators() {
+  public function operators() {
     $operators = array(
       '=' => array(
         'title' => t('Is equal to'),
@@ -122,7 +131,7 @@ class views_xml_backend_handler_filter extends views_handler_filter_string {
     return $operators;
   }
 
-  function options_form(&$form, &$form_state) {
+  public function options_form(&$form, &$form_state) {
     parent::options_form($form, $form_state);
     $form['xpath_selector'] = array(
       '#type' => 'textfield',
@@ -140,11 +149,11 @@ class views_xml_backend_handler_filter extends views_handler_filter_string {
    * level of indirection. You will find them in $this->operator
    * and $this->value respectively.
    */
-  function query() {
+  public function query() {
     $this->query->add_filter($this);
   }
 
-  function generate() {
+  public function generate() {
     $operator = $this->options['expose'] ? $this->operator : $this->options['operator'];
     $xpath = $this->options['xpath_selector'];
     $value = $this->value;
@@ -161,7 +170,7 @@ class views_xml_backend_handler_filter extends views_handler_filter_string {
     return "$operator($xpath, $value)";
   }
 
-  function ui_name($short = FALSE) {
+  public function ui_name($short = FALSE) {
     if (!empty($this->options['ui_name'])) {
       $title = check_plain($this->options['ui_name']);
       return $title;
@@ -169,4 +178,5 @@ class views_xml_backend_handler_filter extends views_handler_filter_string {
     $title = ($short && isset($this->definition['title short'])) ? $this->definition['title short'] : $this->definition['title'];
     return t('!xpath: !title', array('!xpath' => $this->options['xpath_selector'], '!title' => $title));
   }
+
 }

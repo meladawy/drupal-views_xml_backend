@@ -1,21 +1,23 @@
 <?php
+
 /**
  * @file
- * A handler to provide proper displays for dates.
+ * Contains views_xml_backend_handler_field_date.
  */
 
+/**
+ * A handler to provide proper displays for dates.
+ */
 class views_xml_backend_handler_field_date extends views_xml_backend_handler_field {
-  function option_definition() {
-    $options = parent::option_definition();
 
+  public function option_definition() {
+    $options = parent::option_definition();
     $options['date_format'] = array('default' => 'small');
     $options['custom_date_format'] = array('default' => '');
-
     return $options;
   }
 
-  function options_form(&$form, &$form_state) {
-
+  public function options_form(&$form, &$form_state) {
     $date_formats = array();
     $date_types = system_get_date_types();
     foreach ($date_types as $key => $value) {
@@ -48,7 +50,7 @@ class views_xml_backend_handler_field_date extends views_xml_backend_handler_fie
     parent::options_form($form, $form_state);
   }
 
-  function render($values) {
+  public function render($values) {
     $value = $this->get_value($values);
 
     // We assume if the date is numeric, then it already is a unix timestamp.
@@ -65,26 +67,35 @@ class views_xml_backend_handler_field_date extends views_xml_backend_handler_fie
       switch ($format) {
         case 'raw time ago':
           return format_interval($time_diff, is_numeric($custom_format) ? $custom_format : 2);
+
         case 'time ago':
           return t('%time ago', array('%time' => format_interval($time_diff, is_numeric($custom_format) ? $custom_format : 2)));
+
         case 'raw time hence':
           return format_interval(-$time_diff, is_numeric($custom_format) ? $custom_format : 2);
+
         case 'time hence':
           return t('%time hence', array('%time' => format_interval(-$time_diff, is_numeric($custom_format) ? $custom_format : 2)));
+
         case 'raw time span':
           return ($time_diff < 0 ? '-' : '') . format_interval(abs($time_diff), is_numeric($custom_format) ? $custom_format : 2);
+
         case 'inverse time span':
           return ($time_diff > 0 ? '-' : '') . format_interval(abs($time_diff), is_numeric($custom_format) ? $custom_format : 2);
+
         case 'time span':
           return t(($time_diff < 0 ? '%time hence' : '%time ago'), array('%time' => format_interval(abs($time_diff), is_numeric($custom_format) ? $custom_format : 2)));
+
         case 'custom':
           if ($custom_format == 'r') {
             return format_date($value, $format, $custom_format, NULL, 'en');
           }
           return format_date($value, $format, $custom_format);
+
         default:
           return format_date($value, $format);
       }
     }
   }
+
 }

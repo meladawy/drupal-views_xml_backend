@@ -1,17 +1,22 @@
 <?php
+
 /**
  * @file
- * Base sort handler for views_xml_backend.
+ * Contains views_xml_backend_handler_sort.
  */
 
+/**
+ * Base sort handler for views_xml_backend.
+ */
 class views_xml_backend_handler_sort extends views_handler_sort {
-  function option_definition() {
+
+  public function option_definition() {
     $options = parent::option_definition();
     $options['xpath_selector'] = array('default' => '');
     return $options;
   }
 
-  function options_form(&$form, &$form_state) {
+  public function options_form(&$form, &$form_state) {
     parent::options_form($form, $form_state);
     $form['xpath_selector'] = array(
       '#type' => 'textfield',
@@ -25,12 +30,12 @@ class views_xml_backend_handler_sort extends views_handler_sort {
   /**
    * Called to add the sort to a query.
    */
-  function query() {
+  public function query() {
     $this->query->add_field($this->table_alias, $this->options['xpath_selector'], '', $this->options);
     $this->query->add_orderby($this);
   }
 
-  function sort(&$result) {
+  public function sort(&$result) {
     $this->field = $this->options['xpath_selector'];
 
     // Do not try to sort multiple-valued fields. Can we some how?
@@ -45,18 +50,18 @@ class views_xml_backend_handler_sort extends views_handler_sort {
     }
   }
 
-  function sort_asc($a, $b) {
+  public function sort_asc($a, $b) {
     $a_value = isset($a->{$this->field}) ? $a->{$this->field} : '';
     $b_value = isset($b->{$this->field}) ? $b->{$this->field} : '';
 
     return strcasecmp($a_value, $b_value);
   }
 
-  function sort_desc($a, $b) {
+  public function sort_desc($a, $b) {
     return -$this->sort_asc($a, $b);
   }
 
-  function ui_name($short = FALSE) {
+  public function ui_name($short = FALSE) {
     if (!empty($this->options['ui_name'])) {
       $title = check_plain($this->options['ui_name']);
       return $title;
@@ -64,4 +69,5 @@ class views_xml_backend_handler_sort extends views_handler_sort {
     $title = ($short && isset($this->definition['title short'])) ? $this->definition['title short'] : $this->definition['title'];
     return t('!xpath: !title', array('!xpath' => $this->options['xpath_selector'], '!title' => $title));
   }
+
 }

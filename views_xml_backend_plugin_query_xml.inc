@@ -2,8 +2,9 @@
 
 /**
  * @file
- * Query plugin for views_xml_backend.module.
+ * Contains views_xml_backend_plugin_query_xml.
  */
+
 class views_xml_backend_plugin_query_xml extends views_plugin_query {
 
   /**
@@ -28,7 +29,7 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
    *   (Optional) Provide a countquery if this is true, otherwise provide a
    *   normal query. Defaults to FALSE.
    */
-  function query($get_count = FALSE) {
+  public function query($get_count = FALSE) {
     $row_xpath = $this->options['row_xpath'];
 
     if ($this->filter) {
@@ -62,7 +63,7 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
   /**
    * Builds the necessary info to execute the query.
    */
-  function build(&$view) {
+  public function build(&$view) {
     $view->init_pager();
 
     // Let the pager modify the query to add limits.
@@ -73,7 +74,7 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
     $view->build_info['query_args'] = array();
   }
 
-  function fetch_file($uri) {
+  public function fetch_file($uri) {
     $parsed = parse_url($uri);
     // Check for local file.
     if (empty($parsed['host'])) {
@@ -127,7 +128,7 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
     return $result->data;
   }
 
-  function execute(&$view) {
+  public function execute(&$view) {
     $start = microtime(TRUE);
 
     // Avoid notices about $view->execute_time being undefined if the query
@@ -175,14 +176,14 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
     $this->errorStop($use, $this->options['show_errors']);
   }
 
-  function replace_arguments($view, $string){
+  public function replace_arguments($view, $string){
     if (!empty($view->build_info['substitutions'])) {
       return strtr($string, $view->build_info['substitutions']);
     }
     return $string;
   }
 
-  function parse(&$view, $data) {
+  public function parse(&$view, $data) {
     // The appropriate error messages will be displayed automatically.
     if (!$doc = $this->get_dom_document($data->contents)) {
       return;
@@ -334,10 +335,10 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
    * @param string $content
    *   The content to load in the DOM.
    *
-   * @return DOMDocument|FALSE
-   *   A new DOM document, or FALSE on failure.
+   * @return DOMDocument|NULL
+   *   A new DOM document, or NULL on failure.
    */
-  function get_dom_document($content) {
+  public function get_dom_document($content) {
     $doc = new DOMDocument();
 
     if (!$success = $doc->loadXML($content)) {
@@ -347,9 +348,9 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
     return $doc;
   }
 
-  function add_signature(&$view) {}
+  public function add_signature(&$view) {}
 
-  function option_definition() {
+  public function option_definition() {
     $options = parent::option_definition();
     $options['xml_file'] = array('default' => '');
     $options['row_xpath'] = array('default' => '');
@@ -359,7 +360,7 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
     return $options;
   }
 
-  function options_form(&$form, &$form_state) {
+  public function options_form(&$form, &$form_state) {
     $form['xml_file'] = array(
       '#type' => 'textfield',
       '#title' => t('XML File'),
@@ -390,7 +391,7 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
     );
   }
 
-  function add_field($table, $field, $alias = '', $params = array()) {
+  public function add_field($table, $field, $alias = '', $params = array()) {
     $alias = $field;
 
     // Add field info array.
@@ -405,26 +406,26 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
     return $field;
   }
 
-  function add_orderby($orderby) {
+  public function add_orderby($orderby) {
     $this->orderby[] = $orderby;
   }
 
-  function add_filter($filter) {
+  public function add_filter($filter) {
     $this->filter[$filter->options['group']][] = $filter;
   }
 
-  function add_argument($argument) {
+  public function add_argument($argument) {
     $this->argument[] = $argument;
   }
 
 
   /**
-   * Return info to base the uniqueness of the result on.
+   * Returns info to base the uniqueness of the result on.
    *
-   * @return $cache_info
+   * @return array $cache_info
    *   Array with query unique data.
    */
-  function get_cache_info() {
+  public function get_cache_info() {
     return array(
       'xml_file' => $this->options['xml_file'],
       'row_xpath' => $this->options['row_xpath'],
@@ -433,7 +434,7 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
   }
 
   /**
-   * Start custom error handling.
+   * Starts custom error handling.
    *
    * @return bool
    *   The previous value of use_errors.
@@ -443,7 +444,7 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
   }
 
   /**
-   * Stop custom error handling.
+   * Stops custom error handling.
    *
    * @param bool $use
    *   The previous value of use_errors.
@@ -470,4 +471,5 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
     libxml_clear_errors();
     libxml_use_internal_errors($use);
   }
+
 }

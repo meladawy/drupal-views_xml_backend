@@ -1,12 +1,16 @@
 <?php
+
 /**
  * @file
- * Base field handler for views_xml_backend.
+ * Contains views_xml_backend_handler_field.
  */
 
+/**
+ * Base field handler for views_xml_backend.
+ */
 class views_xml_backend_handler_field extends views_handler_field {
 
-  function render($values) {
+  public function render($values) {
     if (!isset($values->{$this->field_alias})) {
       return;
     }
@@ -29,11 +33,11 @@ class views_xml_backend_handler_field extends views_handler_field {
     return $this->render_field($values);
   }
 
-  function render_field($value) {
+  public function render_field($value) {
     return check_plain(decode_entities($value));
   }
 
-  function option_definition() {
+  public function option_definition() {
     $options = parent::option_definition();
     $options['xpath_selector'] = array('default' => '');
     $options['multiple'] = array('default' => FALSE);
@@ -42,7 +46,7 @@ class views_xml_backend_handler_field extends views_handler_field {
     return $options;
   }
 
-  function options_form(&$form, &$form_state) {
+  public function options_form(&$form, &$form_state) {
     parent::options_form($form, $form_state);
     $form['xpath_selector'] = array(
       '#title' => t('XPath selector'),
@@ -98,7 +102,7 @@ class views_xml_backend_handler_field extends views_handler_field {
   /**
    * Called to add the field to a query.
    */
-  function query() {
+  public function query() {
     // Add the field.
     $this->table_alias = 'xml';
 
@@ -110,7 +114,7 @@ class views_xml_backend_handler_field extends views_handler_field {
     );
   }
 
-  function ui_name($short = FALSE) {
+  public function ui_name($short = FALSE) {
     if (!empty($this->options['ui_name'])) {
       $title = check_plain($this->options['ui_name']);
       return $title;
@@ -130,7 +134,7 @@ class views_xml_backend_handler_field extends views_handler_field {
   /**
    * Called to determine what to tell the clicksorter.
    */
-  function click_sort($order) {
+  public function click_sort($order) {
     if (isset($this->field_alias)) {
 
       // @todo: Figure out a better way to do this. ewww.
@@ -150,4 +154,5 @@ class views_xml_backend_handler_field extends views_handler_field {
       $this->query->add_orderby($sort);
     }
   }
+
 }

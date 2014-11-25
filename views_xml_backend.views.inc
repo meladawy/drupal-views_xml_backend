@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * Views hooks for views_xml_backend.

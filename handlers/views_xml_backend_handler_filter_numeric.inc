@@ -1,22 +1,29 @@
 <?php
+
 /**
  * @file
- * Numeric filter handler for views_xml_backend.
+ * Contains views_xml_backend_handler_filter_numeric.
  */
 
+/**
+ * Numeric filter handler for views_xml_backend.
+ */
 class views_xml_backend_handler_filter_numeric extends views_handler_filter_numeric {
-  // exposed filter options
-  var $no_single = TRUE;
 
-  function option_definition() {
+  /**
+   * Exposed filter options.
+   *
+   * @var bool
+   */
+  public $no_single = TRUE;
+
+  public function option_definition() {
     $options = parent::option_definition();
-
     $options['xpath_selector'] = array('default' => '');
-
     return $options;
   }
 
-  function options_form(&$form, &$form_state) {
+  public function options_form(&$form, &$form_state) {
     parent::options_form($form, $form_state);
     $form['xpath_selector'] = array(
       '#type' => 'textfield',
@@ -28,17 +35,17 @@ class views_xml_backend_handler_filter_numeric extends views_handler_filter_nume
   }
 
   /**
-   * Add this filter to the query.
+   * Adds this filter to the query.
    *
    * Due to the nature of fapi, the value and the operator have an unintended
    * level of indirection. You will find them in $this->operator
    * and $this->value respectively.
    */
-  function query() {
+  public function query() {
     $this->query->add_filter($this);
   }
 
-  function generate() {
+  public function generate() {
     $operator = $this->options['expose'] ? $this->operator : $this->options['operator'];
     $xpath = $this->options['xpath_selector'];
 
@@ -51,7 +58,7 @@ class views_xml_backend_handler_filter_numeric extends views_handler_filter_nume
     return $xpath . $operator . $this->value['value'];
   }
 
-  function ui_name($short = FALSE) {
+  public function ui_name($short = FALSE) {
     if (!empty($this->options['ui_name'])) {
       $title = check_plain($this->options['ui_name']);
       return $title;
@@ -60,7 +67,8 @@ class views_xml_backend_handler_filter_numeric extends views_handler_filter_nume
     return t('!xpath: !title', array('!xpath' => $this->options['xpath_selector'], '!title' => $title));
   }
 
-  function __toString() {
+  public function __toString() {
     return $this->generate();
   }
+
 }

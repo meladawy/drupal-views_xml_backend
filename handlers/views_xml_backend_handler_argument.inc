@@ -1,22 +1,29 @@
 <?php
 
+/**
+ * @file
+ * Contains views_xml_backend_handler_argument.
+ */
+
 class views_xml_backend_handler_argument extends views_handler_argument {
+
   /**
-   * Set up the query for this argument. The argument sent may be found at
-   * $this->argument.
+   * Sets up the query for this argument.
+   *
+   * The argument sent may be found at $this->argument.
    */
-  function query($group_by = FALSE) {
+  public function query($group_by = FALSE) {
     // @todo: Handle group_by argument.
     $this->query->add_argument($this);
   }
 
-  function option_definition() {
+  public function option_definition() {
     $options = parent::option_definition();
     $options['xpath_selector'] = array('default' => '');
     return $options;
   }
 
-  function options_form(&$form, &$form_state) {
+  public function options_form(&$form, &$form_state) {
     parent::options_form($form, $form_state);
     $form['xpath_selector'] = array(
       '#type' => 'textfield',
@@ -27,7 +34,7 @@ class views_xml_backend_handler_argument extends views_handler_argument {
     );
   }
 
-  function generate() {
+  public function generate() {
     $xpath = $this->options['xpath_selector'];
     $value = $this->get_value();
 
@@ -37,11 +44,11 @@ class views_xml_backend_handler_argument extends views_handler_argument {
     return "$xpath = $value";
   }
 
-  function __toString() {
+  public function __toString() {
     return $this->generate();
   }
 
-  function ui_name($short = FALSE) {
+  public function ui_name($short = FALSE) {
     if (!empty($this->options['ui_name'])) {
       $title = check_plain($this->options['ui_name']);
       return $title;
@@ -49,4 +56,5 @@ class views_xml_backend_handler_argument extends views_handler_argument {
     $title = ($short && isset($this->definition['title short'])) ? $this->definition['title short'] : $this->definition['title'];
     return t('!xpath: !title', array('!xpath' => $this->options['xpath_selector'], '!title' => $title));
   }
+
 }

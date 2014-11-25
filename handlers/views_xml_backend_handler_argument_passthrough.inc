@@ -1,20 +1,27 @@
 <?php
 
+/**
+ * @file
+ * Contains views_xml_backend_handler_argument_passthrough.
+ */
+
 class views_xml_backend_handler_argument_passthrough extends views_handler_argument {
 
   /**
-   * Override options_form() so that only the relevant options
-   * are displayed to the user.
+   * Overrides parent::options_form().
+   *
+   * Only the relevant options are displayed to the user.
    */
-  function options_form(&$form, &$form_state) {
+  public function options_form(&$form, &$form_state) {
     parent::options_form($form, $form_state);
-
     unset($form['exception']);
   }
 
   /**
-   * Override the behavior of query() to prevent the query
-   * from being changed in any way.
+   * Overrides parent::query().
+   *
+   * Prevent the query from being changed in any way.
    */
-  function query($group_by = FALSE) {}
+  public function query($group_by = FALSE) {}
+
 }
