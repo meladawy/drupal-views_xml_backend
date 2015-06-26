@@ -1,0 +1,15 @@
+<?php
+
+/**
+ * @file
+ * Update hooks for views_xml_backend.module.
+ */
+
+/**
+ * Remove managed files.
+ */
+function views_xml_backend_update_7101() {
+  db_delete('file_managed')
+    ->condition('uri', 'public://views_xml_backend/%', 'LIKE')
+    ->execute();
+}

@@ -122,9 +122,10 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
       return $this->fetch_file($uri);
     }
 
-    // As learned from Feeds caching mechanism, save to file.
-    file_save_data($result->data, $cache_file_uri, FILE_EXISTS_REPLACE);
+    // Cache data to a file.
+    file_unmanaged_save_data($result->data, $cache_file_uri, FILE_EXISTS_REPLACE);
     cache_set($cache_file, $result->headers);
+
     return $result->data;
   }
 
