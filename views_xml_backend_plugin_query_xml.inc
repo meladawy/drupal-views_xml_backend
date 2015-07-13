@@ -255,7 +255,7 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
           if ($node_list && $node_list->length > 0) {
 
             // Allow multiple values in a field.
-            if ($field['multiple']) {
+            if (!empty($field['multiple'])) {
 
               $item->$field_key = array();
               foreach ($node_list as $node) {
