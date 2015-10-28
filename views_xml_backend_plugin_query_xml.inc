@@ -101,6 +101,10 @@ class views_xml_backend_plugin_query_xml extends views_plugin_query {
         $headers['If-Modified-Since'] = $last_headers['last-modified'];
       }
     }
+    if (empty($headers['Accept'])) {
+      // Tell the sever we're looking for XML.
+      $headers['Accept'] = 'application/xml';
+    }
 
     $result = drupal_http_request($uri, array('headers' => $headers));
     if (isset($result->error)) {
