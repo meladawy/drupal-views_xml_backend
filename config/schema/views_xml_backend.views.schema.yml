@@ -1,0 +1,9 @@
+# Schema for the views plugins of the Views XML Backend module.
+
+views.field.xml_text:
+  type: views_field
+  label: 'Views XML Backend field'
+
+views.field.xml_markup:
+  type: views_field
+  label: 'Views XML Backend Markup field'

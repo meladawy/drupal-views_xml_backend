@@ -2,26 +2,47 @@
 
 /**
  * @file
- * Contains views_xml_backend_handler_field_date.
+ * Contains \Drupal\views_xml_backend\Plugin\views\field\XmlDate.
  */
+
+namespace Drupal\views_xml_backend\Plugin\views\field;
+
+use Drupal\views_xml_backend\Plugin\views\field\XmlText;
+use Drupal\views\ResultRow;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Datetime\Entity\DateFormat;
+use Drupal\Component\Utility\SafeMarkup;
 
 /**
- * A handler to provide proper displays for dates.
+ * A handler to provide an XML date field.
+ *
+ * @ingroup views_field_handlers
+ *
+ * @ViewsField("xml_date")
  */
-class views_xml_backend_handler_field_date extends views_xml_backend_handler_field {
+class XmlDate extends XmlText {
 
-  public function option_definition() {
-    $options = parent::option_definition();
+  /**
+   * {@inheritdoc}
+   */
+  protected function defineOptions() {
+    $options = parent::defineOptions();
     $options['date_format'] = array('default' => 'small');
     $options['custom_date_format'] = array('default' => '');
     return $options;
   }
 
-  public function options_form(&$form, &$form_state) {
+  /**
+   * {@inheritdoc}
+   */
+  public function buildOptionsForm(&$form, FormStateInterface $form_state) {
+
+    parent::buildOptionsForm($form, $form_state);
+
     $date_formats = array();
-    $date_types = system_get_date_types();
+    $date_types = DateFormat::loadMultiple();
     foreach ($date_types as $key => $value) {
-      $date_formats[$value['type']] = check_plain(t($value['title'] . ' format')) . ': ' . format_date(REQUEST_TIME, $value['type']);
+      $date_formats[$key] = SafeMarkup::checkPlain(t($value->get('label') . ' format')) . ': ' . format_date(REQUEST_TIME, 'custom', $value->getPattern());
     }
 
     $form['date_format'] = array(
@@ -46,12 +67,10 @@ class views_xml_backend_handler_field_date extends views_xml_backend_handler_fie
       '#default_value' => isset($this->options['custom_date_format']) ? $this->options['custom_date_format'] : '',
       '#dependency' => array('edit-options-date-format' => array('custom', 'raw time ago', 'time ago', 'raw time hence', 'time hence', 'raw time span', 'time span', 'raw time span', 'inverse time span', 'time span')),
     );
-
-    parent::options_form($form, $form_state);
   }
 
-  public function render($values) {
-    $value = $this->get_value($values);
+  public function render(ResultRow $values) {
+    $value = $values->{$this->options['id']};
 
     // We assume if the date is numeric, then it already is a unix timestamp.
     if (!is_numeric($value)) {
@@ -66,26 +85,25 @@ class views_xml_backend_handler_field_date extends views_xml_backend_handler_fie
       $time_diff = REQUEST_TIME - $value; // Will be positive for a datetime in the past (ago), and negative for a datetime in the future (hence).
       switch ($format) {
         case 'raw time ago':
-          return format_interval($time_diff, is_numeric($custom_format) ? $custom_format : 2);
+          return \Drupal::service('date.formatter')->formatInterval($time_diff, is_numeric($custom_format) ? $custom_format : 2);
 
         case 'time ago':
-          return t('%time ago', array('%time' => format_interval($time_diff, is_numeric($custom_format) ? $custom_format : 2)));
+          return t('%time ago', array('%time' => \Drupal::service('date.formatter')->formatInterval($time_diff, is_numeric($custom_format) ? $custom_format : 2)));
 
         case 'raw time hence':
-          return format_interval(-$time_diff, is_numeric($custom_format) ? $custom_format : 2);
+          return \Drupal::service('date.formatter')->formatInterval(-$time_diff, is_numeric($custom_format) ? $custom_format : 2);
 
         case 'time hence':
-          return t('%time hence', array('%time' => format_interval(-$time_diff, is_numeric($custom_format) ? $custom_format : 2)));
+          return t('%time hence', array('%time' => \Drupal::service('date.formatter')->formatInterval(-$time_diff, is_numeric($custom_format) ? $custom_format : 2)));
 
         case 'raw time span':
-          return ($time_diff < 0 ? '-' : '') . format_interval(abs($time_diff), is_numeric($custom_format) ? $custom_format : 2);
+          return ($time_diff < 0 ? '-' : '') . \Drupal::service('date.formatter')->formatInterval(abs($time_diff), is_numeric($custom_format) ? $custom_format : 2);
 
         case 'inverse time span':
-          return ($time_diff > 0 ? '-' : '') . format_interval(abs($time_diff), is_numeric($custom_format) ? $custom_format : 2);
+          return ($time_diff > 0 ? '-' : '') . \Drupal::service('date.formatter')->formatInterval(abs($time_diff), is_numeric($custom_format) ? $custom_format : 2);
 
         case 'time span':
-          return t(($time_diff < 0 ? '%time hence' : '%time ago'), array('%time' => format_interval(abs($time_diff), is_numeric($custom_format) ? $custom_format : 2)));
-
+          return t(($time_diff < 0 ? '%time hence' : '%time ago'), array('%time' => \Drupal::service('date.formatter')->formatInterval(abs($time_diff), is_numeric($custom_format) ? $custom_format : 2)));
         case 'custom':
           if ($custom_format == 'r') {
             return format_date($value, $format, $custom_format, NULL, 'en');
