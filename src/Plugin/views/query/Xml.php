@@ -99,7 +99,7 @@ class Xml extends QueryPluginBase {
 
     $options['xml_file'] = array('default' => '');
     $options['row_xpath'] = array('default' => '');
-    $options['default_namespace'] = array('default' => '');
+    $options['default_namespace'] = array('default' => 'default');
     $options['show_errors'] = array('default' => TRUE);
 
     return $options;
@@ -229,7 +229,7 @@ class Xml extends QueryPluginBase {
     $view->initPager();
 
     // Let the pager modify the query to add limits.
-    //$this->pager->query();
+    $view->pager->query();
 
     $view->build_info['query'] = $this->query();
     $view->build_info['count_query'] = '';
@@ -252,84 +252,51 @@ class Xml extends QueryPluginBase {
     \Drupal::moduleHandler()->alter('views_xml_backend_data', $data, $view->name);
 
     $doc = new \DOMDocument();
-    $doc->loadXML($data->contents);
+    $success = $doc->loadXML($data->contents);
     // If the file fails to load, bail.
-    if (!$doc) {
+    if (!$success) {
       return;
     }
 
     $xpath = new \DOMXPath($doc);
+    $this->registerNamespaces($xpath);
 
-    // Register namespaces.
-    $simple = simplexml_import_dom($doc);
-    if (!$simple) {
-      return;
-    }
-    $namespaces = $simple->getNamespaces(TRUE);
-    foreach ($namespaces as $prefix => $namespace) {
-      if ($prefix === '') {
-        if (empty($this->options['default_namespace'])) {
-          $prefix = 'default';
+    $view->total_rows = $xpath->query($view->build_info['query'])->length;
+    $view->total_rows -= $view->pager->getOffset();
+
+    $this->calculatePager($view);
+
+    foreach ($xpath->query($view->build_info['query']) as $index => $row) {
+      $result_row = new ResultRow();
+      $result_row->index = $index;
+      $view->result[] = $result_row;
+
+      foreach ($view->field as $fieldname => $field) {
+        $node_list = $xpath->query($field->options['xpath_selector'], $row);
+
+        if ($node_list === FALSE) {
+          continue;
         }
-        else {
-          $prefix = $this->options['default_namespace'];
+
+        $values = [];
+        foreach ($node_list as $node) {
+          $values[] = $node->nodeValue;
         }
-      }
-      $xpath->registerNamespace($prefix, $namespace);
-    }
-
-    try {
-      if (!empty($view->pager->options['items_per_page']) || !empty($this->offset)) {
-        // We can't have an offset without a limit, so provide a very large limit instead.
-        $limit  = intval(!empty($view->pager->options['items_per_page']) ? $view->pager->options['items_per_page'] : 999999);
-        $offset = intval(!empty($view->pager->options['offset']) ? $view->pager->options['offset'] : 0);
-        $limit += $offset;
-        $view->build_info['query'] .= "[position() > $offset and not(position() > $limit)]";
-      }
-
-      $view->total_rows = $xpath->evaluate($view->build_info['query'])->length;
-      if (!empty($view->pager->options['offset'])) {
-        $view->total_rows -= $view->pager->options['offset'];
-      }
-
-      $rows = $xpath->query($view->build_info['query']);
-
-      $result = [];
-      foreach ($rows as $index => $row) {
-        $item = [];
-        foreach ($view->field as $fieldname => $field) {
-          $node_list = $xpath->evaluate($field->options['xpath_selector'], $row);
-          if ($node_list) {
-            // Allow multiple values in a field.
-            if ($field->options['multiple']) {
-              $values = [];
-              foreach ($node_list as $node) {
-                $values[] = $node->nodeValue;
-              }
-              $item[$fieldname] = $values;
-            }
-            // Single value, just pull the first.
-            else {
-              $item[$fieldname] = $node_list->item(0)->nodeValue;
-            }
-          }
-        }
-        $row = new ResultRow($item);
-        $row->index = $index;
-        $view->result[] = $row;
+        $result_row->$fieldname = $values;
       }
     }
-    catch (\Exception $e) {
-      $view->result = [];
-      if (!empty($view->live_preview)) {
-        drupal_set_message($e->getMessage(), 'error');
-      }
-      else {
-        debug($e->getMessage(), 'Views XML Backend');
-      }
-    }
+
+    $view->pager->postExecute($view->result);
+    $view->pager->updatePageInfo();
 
     $view->execute_time = microtime(TRUE) - $start;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCacheMaxAge() {
+    return 0;
   }
 
   /**
@@ -341,7 +308,7 @@ class Xml extends QueryPluginBase {
    * @return string
    *   The contents of the XML file.
    *
-   * @throws \Exception
+   * @throws \RuntimeException
    *   Thrown when an error occurs.
    *
    * @todo Make the exceptions more meaningful.
@@ -351,22 +318,48 @@ class Xml extends QueryPluginBase {
 
     // Check for local file.
     if (empty($parsed['host'])) {
-      if (!file_exists($uri)) {
-        $message = $this->t('Local file not found: @uri', ['@uri' => $uri]);
-        $this->logger->error($message);
-        drupal_set_message($message, 'error');
-        return;
-      }
+      return $this->fetchLocalFile($uri);
+    }
+
+    return $this->fetchRemoteFile($uri);
+  }
+
+  /**
+   * Returns the contents of a local file.
+   *
+   * @param string $uri
+   *   The local file path.
+   *
+   * @return string
+   *   The file contents.
+   */
+  protected function fetchLocalFile($uri) {
+    if (file_exists($uri)) {
       return file_get_contents($uri);
     }
 
+    throw new \RuntimeException($this->t('Local file not found: @uri', ['@uri' => $uri]));
+  }
+
+  /**
+   * Returns the contents of a remote file.
+   *
+   * @param string $uri
+   *   The remote file URL.
+   *
+   * @return string
+   *   The file contents.
+   */
+  protected function fetchRemoteFile($uri) {
     $destination = 'public://views_xml_backend';
+
     if (!file_prepare_directory($destination, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS)) {
-      throw new \Exception($this->t('Views XML Backend directory either cannot be created or is not writable.'));
+      throw new \RuntimeException($this->t('Views XML Backend directory either cannot be created or is not writable.'));
     }
 
     $headers = [];
     $cache_file = 'views_xml_backend_' . hash('sha256', $uri);
+    $cache_file_uri = "$destination/$cache_file";
 
     if ($cache = $this->cacheBackend->get($cache_file)) {
       $last_headers = $cache->data;
@@ -377,34 +370,57 @@ class Xml extends QueryPluginBase {
       if (!empty($last_headers['last-modified'])) {
         $headers['If-Modified-Since'] = $last_headers['last-modified'];
       }
-
     }
 
-    try {
-      $response = $this->httpClient->get($uri);
-      $data = (string) $response->getBody();
-      $cache_file_uri = "$destination/$cache_file";
+    $response = $this->httpClient->get($uri);
 
-      if ($response->getStatusCode() == 304) {
-        if (file_exists($cache_file_uri)) {
-          return file_get_contents($cache_file_uri);
-        }
-        // We have the headers but no cache file. Run it back.
-        $this->cacheBackend->set($cache_file, NULL);
-        return $this->fetch_file($uri);
+    if ($response->getStatusCode() === 304) {
+      if (file_exists($cache_file_uri)) {
+        return file_get_contents($cache_file_uri);
+      }
+      // We have the headers but no cache file. Run it again.
+      $this->cacheBackend->delete($cache_file);
+
+      return $this->fetchRemoteFile($uri);
+    }
+
+    $data = trim($response->getBody());
+
+    file_unmanaged_save_data($data, $cache_file_uri, FILE_EXISTS_REPLACE);
+    $this->cacheBackend->set($cache_file, array_change_key_case($response->getHeaders()));
+
+    return $data;
+  }
+
+  /**
+   * Registers available namespaces.
+   *
+   * @param \DOMXPath $xpath
+   *   The XPath object.
+   */
+  protected function registerNamespaces(\DOMXPath $xpath) {
+    if (!$simple = simplexml_import_dom($xpath->document)) {
+      return;
+    }
+
+    foreach ($simple->getNamespaces(TRUE) as $prefix => $namespace) {
+      if ($prefix === '') {
+        $prefix = $this->options['default_namespace'];
       }
 
-      file_unmanaged_save_data($data, $cache_file_uri, FILE_EXISTS_REPLACE);
-      $this->cacheBackend->set($cache_file, array_change_key_case($response->getHeaders()));
-      return $data;
+      $xpath->registerNamespace($prefix, $namespace);
     }
-    catch (RequestException $e) {
-      if ($this->options['show_errors']) {
-        drupal_set_message($e->getMessage(), 'error');
-      }
-      watchdog_exception('views_xml_backend', $e->getMessage());
-      return FALSE;
+  }
+
+  protected function calculatePager(ViewExecutable $view) {
+    if (empty($this->limit) && empty($this->offset)) {
+      return;
     }
+
+    $limit  = intval(!empty($this->limit) ? $this->limit : 999999);
+    $offset = intval(!empty($this->offset) ? $this->offset : 0);
+    $limit += $offset;
+    $view->build_info['query'] .= "[position() > $offset and not(position() > $limit)]";
   }
 
 }
