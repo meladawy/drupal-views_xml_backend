@@ -21,34 +21,22 @@ function views_xml_backend_views_data() {
   $data['xml']['xml_text'] = [
     'title' => t('XML Text'),
     'help' => t('Text in the XML file.'),
-    'field' => [
-      'id' => 'xml_text',
-    ],
-    'argument' => [
-      'id' => 'string',
-    ],
-    'filter' => [
-      'id' => 'string',
-    ],
-    'sort' => [
-      'id' => 'standard',
-    ],
+    'field' => ['id' => 'xml_text'],
+    'argument' => ['id' => 'views_xml_backend_standard'],
+    'filter' => ['id' => 'views_xml_backend_standard'],
+    'sort' => ['id' => 'views_xml_backend_standard'],
   ];
 
   $data['xml']['xml_date'] = [
     'title' => t('XML Date'),
     'help' => t('Date in the XML file.'),
-    'field' => [
-      'id' => 'xml_date',
-     ],
+    'field' => ['id' => 'xml_date'],
   ];
 
   $data['xml']['xml_markup'] = [
     'title' => t('XML Markup Text'),
     'help' => t('Markup text in the XML file.'),
-    'field' => [
-      'id' => 'xml_markup',
-     ],
+    'field' => ['id' => 'xml_markup'],
   ];
 
   return $data;

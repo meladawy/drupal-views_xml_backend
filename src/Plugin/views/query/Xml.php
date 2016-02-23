@@ -13,6 +13,7 @@ use Drupal\views\Plugin\views\join\JoinPluginBase;
 use Drupal\views\Plugin\views\query\QueryPluginBase;
 use Drupal\views\ResultRow;
 use Drupal\views\ViewExecutable;
+use Drupal\views_xml_backend\Plugin\views\argument\XmlArgumentInterface;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\RequestException;
 use Psr\Log\LoggerInterface;
@@ -30,6 +31,13 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * )
  */
 class Xml extends QueryPluginBase {
+
+  /**
+   * A list of added arguments.
+   *
+   * @var \Drupal\views_xml_backend\Plugin\views\argument\XmlArgumentInterface[]
+   */
+  protected $arguments = [];
 
   /**
    * The cache backend.
@@ -205,18 +213,18 @@ class Xml extends QueryPluginBase {
    * {@inheritdoc}
    */
   public function query($get_count = FALSE) {
-    $filter_string = '';
+    $row_xpath = $this->options['row_xpath'];
 
-    if (!empty($this->filter)) {
-      $filters = [];
-      foreach ($this->filter as $filter) {
-        $filters[] = $filter->generate();
-      }
+    if ($this->filters) {
       // @todo Add an option for the filters to be 'and' or 'or'.
-      $filter_string =  '[' . implode(' and ', $filters) . ']';
+      $row_xpath .=  '[' . implode(' and ', $this->filters) . ']';
     }
 
-    return $this->options['row_xpath'] . $filter_string;
+    if ($this->arguments) {
+      $row_xpath .=  '[' . implode(' and ', $this->arguments) . ']';
+    }
+
+    return $row_xpath;
   }
 
   /**
@@ -294,6 +302,16 @@ class Xml extends QueryPluginBase {
    */
   public function getCacheMaxAge() {
     return 0;
+  }
+
+  /**
+   * Adds an argument.
+   *
+   * @param \Drupal\views_xml_backend\Plugin\views\argument\XmlArgumentInterface $argument
+   *   The argument to add.
+   */
+  public function addArgument(XmlArgumentInterface $argument) {
+    $this->arguments[] = $argument;
   }
 
   /**
