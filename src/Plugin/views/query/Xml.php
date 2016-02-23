@@ -7,12 +7,16 @@
 
 namespace Drupal\views_xml_backend\Plugin\views\query;
 
+use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\views\Plugin\views\join\JoinPluginBase;
 use Drupal\views\Plugin\views\query\QueryPluginBase;
 use Drupal\views\ResultRow;
 use Drupal\views\ViewExecutable;
+use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\RequestException;
+use Psr\Log\LoggerInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Views query plugin for an XML query.
@@ -27,6 +31,65 @@ use GuzzleHttp\Exception\RequestException;
  * )
  */
 class Xml extends QueryPluginBase {
+
+  /**
+   * The cache backend.
+   *
+   * @var \Drupal\Core\Cache\CacheBackendInterface
+   */
+  protected $cacheBackend;
+
+  /**
+   * The HTTP client
+   *
+   * @var \GuzzleHttp\ClientInterface
+   */
+  protected $httpClient;
+
+  /**
+   * The logger.
+   *
+   * @var \Psr\Log\LoggerInterface
+   */
+  protected $logger;
+
+  /**
+   * Constructs an Xml object.
+   *
+   * @param array $configuration
+   *   A configuration array containing information about the plugin instance.
+   * @param string $plugin_id
+   *   The plugin_id for the plugin instance.
+   * @param mixed $plugin_definition
+   *   The plugin implementation definition.
+   * @param \GuzzleHttp\ClientInterface $http_client
+   *   The HTTP client.
+   * @param \Drupal\Core\Cache\CacheBackendInterface $cache_backend
+   *   The cache backend.
+   * @param \Psr\Log\LoggerInterface
+   *   The logger.
+   */
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, ClientInterface $http_client, CacheBackendInterface $cache_backend, LoggerInterface $logger) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
+
+    $this->httpClient = $http_client;
+    $this->cacheBackend = $cache_backend;
+    $this->logger = $logger;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    return new static(
+      $configuration,
+      $plugin_id,
+      $plugin_definition,
+      $container->get('http_client'),
+      $container->get('cache.default'),
+      $container->get('logger.factory')->get('views_xml_backend')
+    );
+  }
 
   /**
    * {@inheritdoc}
@@ -124,7 +187,7 @@ class Xml extends QueryPluginBase {
    * @return string
    *   The name that this field can be referred to as.
    */
-  public function addField($table, $field, $alias = '', $params = array()) {
+  public function addField($table, $field, $alias = '', $params = []) {
     $alias = $field;
 
     // Add field info array.
@@ -147,7 +210,7 @@ class Xml extends QueryPluginBase {
 
     $filter_string = '';
     if (!empty($this->filter)) {
-      $filters = array();
+      $filters = [];
       foreach ($this->filter as $filter) {
         $filters[] = $filter->generate();
       }
@@ -231,15 +294,15 @@ class Xml extends QueryPluginBase {
 
       $rows = $xpath->query($view->build_info['query']);
 
-      $result = array();
+      $result = [];
       foreach ($rows as $index => $row) {
-        $item = array();
+        $item = [];
         foreach ($view->field as $fieldname => $field) {
           $node_list = $xpath->evaluate($field->options['xpath_selector'], $row);
           if ($node_list) {
             // Allow multiple values in a field.
             if ($field->options['multiple']) {
-              $values = array();
+              $values = [];
               foreach ($node_list as $node) {
                 $values[] = $node->nodeValue;
               }
@@ -256,8 +319,8 @@ class Xml extends QueryPluginBase {
         $view->result[] = $row;
       }
     }
-    catch (Exception $e) {
-      $view->result = array();
+    catch (\Exception $e) {
+      $view->result = [];
       if (!empty($view->live_preview)) {
         drupal_set_message($e->getMessage(), 'error');
       }
@@ -265,6 +328,8 @@ class Xml extends QueryPluginBase {
         debug($e->getMessage(), 'Views XML Backend');
       }
     }
+
+    $view->execute_time = microtime(TRUE) - $start;
   }
 
   /**
@@ -287,8 +352,8 @@ class Xml extends QueryPluginBase {
     // Check for local file.
     if (empty($parsed['host'])) {
       if (!file_exists($uri)) {
-        $message = t('Local file not found: @uri', array('@uri' => $uri));
-        \Drupal::logger('views_xml_backend')->error($message);
+        $message = $this->t('Local file not found: @uri', ['@uri' => $uri]);
+        $this->logger->error($message);
         drupal_set_message($message, 'error');
         return;
       }
@@ -297,13 +362,13 @@ class Xml extends QueryPluginBase {
 
     $destination = 'public://views_xml_backend';
     if (!file_prepare_directory($destination, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS)) {
-      throw new \Exception(t('Views XML Backend directory either cannot be created or is not writable.'));
+      throw new \Exception($this->t('Views XML Backend directory either cannot be created or is not writable.'));
     }
 
-    $headers = array();
-    $cache_file = 'views_xml_backend_' . md5($uri);
+    $headers = [];
+    $cache_file = 'views_xml_backend_' . hash('sha256', $uri);
 
-    if ($cache = \Drupal::cache()->get($cache_file)) {
+    if ($cache = $this->cacheBackend->get($cache_file)) {
       $last_headers = $cache->data;
 
       if (!empty($last_headers['etag'])) {
@@ -316,7 +381,7 @@ class Xml extends QueryPluginBase {
     }
 
     try {
-      $response = \Drupal::httpClient()->get($uri);
+      $response = $this->httpClient->get($uri);
       $data = (string) $response->getBody();
       $cache_file_uri = "$destination/$cache_file";
 
@@ -325,12 +390,12 @@ class Xml extends QueryPluginBase {
           return file_get_contents($cache_file_uri);
         }
         // We have the headers but no cache file. Run it back.
-        \Drupal::cache()->set($cache_file, NULL);
+        $this->cacheBackend->set($cache_file, NULL);
         return $this->fetch_file($uri);
       }
 
       file_unmanaged_save_data($data, $cache_file_uri, FILE_EXISTS_REPLACE);
-      \Drupal::cache()->set($cache_file, $response->getHeaders());
+      $this->cacheBackend->set($cache_file, array_change_key_case($response->getHeaders()));
       return $data;
     }
     catch (RequestException $e) {
