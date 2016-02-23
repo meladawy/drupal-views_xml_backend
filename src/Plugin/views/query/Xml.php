@@ -47,6 +47,13 @@ class Xml extends QueryPluginBase {
   protected $cacheBackend;
 
   /**
+   * Extra fields to query. Added from sorters.
+   *
+   * @var string[]
+   */
+  protected $extraFields = [];
+
+  /**
    * The HTTP client
    *
    * @var \GuzzleHttp\ClientInterface
@@ -66,6 +73,13 @@ class Xml extends QueryPluginBase {
    * @var \Psr\Log\LoggerInterface
    */
   protected $logger;
+
+  /**
+   * The applied sorts.
+   *
+   * @var callable[]
+   */
+  protected $sorts = [];
 
   /**
    * Constructs an Xml object.
@@ -190,45 +204,6 @@ class Xml extends QueryPluginBase {
   }
 
   /**
-   * Add a field to the query table, possibly with an alias. This will
-   * automatically call ensureTable to make sure the required table
-   * exists, *unless* $table is unset.
-   *
-   * @param string $table
-   *   The table this field is attached to. If NULL, it is assumed this will
-   *   be a formula; otherwise, ensureTable is used to make sure the
-   *   table exists.
-   * @param string $field
-   *   The name of the field to add. This may be a real field or a formula.
-   * @param string $alias
-   *   The alias to create. If not specified, the alias will be $table_$field
-   *   unless $table is NULL. When adding formulae, it is recommended that an
-   *   alias be used.
-   * @param array $params
-   *   An array of parameters additional to the field that will control items
-   *   such as aggregation functions and DISTINCT. Some values that are
-   *   recognized:
-   *   - function: An aggregation function to apply, such as SUM.
-   *   - aggregate: Set to TRUE to indicate that this value should be
-   *     aggregated in a GROUP BY.
-   *
-   * @return string
-   *   The name that this field can be referred to as.
-   */
-  public function addField($table, $field, $alias = '', $params = []) {
-    if (empty($this->fields[$field])) {
-      $this->fields[$field] = [
-      'field' => $field,
-      'table' => $table,
-      'alias' => $field,
-      ] + $params;
-    }
-
-    return $field;
-  }
-
-
-  /**
    * Adds a filter.
    *
    * @param XmlFilterInterface $filter
@@ -236,6 +211,63 @@ class Xml extends QueryPluginBase {
    */
   public function addFilter($filter) {
     $this->filters[] = $filter;
+  }
+
+  /**
+   * Add an ORDER BY clause to the query.
+   *
+   * This is only used to support the built-in random sort plugin.
+   *
+   * @param string $table
+   *   The table this field is part of. If a formula, enter NULL.
+   *   If you want to orderby random use "rand" as table and nothing else.
+   * @param string $field
+   *   The field or formula to sort on. If already a field, enter NULL
+   *   and put in the alias.
+   * @param string $order
+   *   Either ASC or DESC.
+   * @param string $alias
+   *   The alias to add the field as. In SQL, all fields in the order by
+   *   must also be in the SELECT portion. If an $alias isn't specified
+   *   one will be generated for from the $field; however, if the
+   *   $field is a formula, this alias will likely fail.
+   * @param array $params
+   *   Any params that should be passed through to the addField.
+   */
+  public function addOrderBy($table, $field = NULL, $order = 'ASC', $alias = '', $params = []) {
+    if ($table === 'rand') {
+      $this->sorts[] = 'shuffle';
+      return;
+    }
+
+    if (empty($alias)) {
+      return;
+    }
+
+    // Quick hack to support click sorting. We should align this with the sort
+    // plugins.
+    switch (strtoupper($order)) {
+      case 'ASC':
+        $this->sorts[] = function (array &$result) use ($alias) {
+          usort($result, function (ResultRow $a, ResultRow $b) use ($alias) {
+            return strcasecmp(reset($a->$alias), reset($b->$alias));
+          });
+        };
+        break;
+
+      case 'DESC':
+        $this->sorts[] = function (array &$result) use ($alias) {
+          usort($result, function (ResultRow $a, ResultRow $b) use ($alias) {
+            return strcasecmp(reset($b->$alias), reset($a->$alias));
+          });
+        };
+        break;
+    }
+  }
+
+  public function addSort($field, $xpath, $callback) {
+    $this->extraFields[$field] = $xpath;
+    $this->sorts[] = $callback;
   }
 
   /**
@@ -295,10 +327,12 @@ class Xml extends QueryPluginBase {
     $xpath = new \DOMXPath($doc);
     $this->registerNamespaces($xpath);
 
-    $view->total_rows = $xpath->query($view->build_info['query'])->length;
-    $view->total_rows -= $view->pager->getOffset();
-
-    $this->calculatePager($view);
+    if ($view->pager->useCountQuery() || !empty($view->get_total_rows)) {
+      // Normall we would call $view->pager->executeCountQuery($count_query);
+      // but we can't in this case, so do the calculation ourselves.
+      $view->pager->total_items = $xpath->query($view->build_info['query'])->length;
+      $view->pager->total_items -= $view->pager->getOffset();
+    }
 
     foreach ($xpath->query($view->build_info['query']) as $index => $row) {
       $result_row = new ResultRow();
@@ -306,22 +340,25 @@ class Xml extends QueryPluginBase {
       $view->result[] = $result_row;
 
       foreach ($view->field as $field_name => $field) {
-        $node_list = $xpath->query($field->options['xpath_selector'], $row);
-
-        if ($node_list === FALSE) {
-          continue;
-        }
-
-        $values = [];
-        foreach ($node_list as $node) {
-          $values[] = $node->nodeValue;
-        }
-        $result_row->$field_name = $values;
+        $result_row->$field_name = $this->executeRowQuery($xpath, $field->options['xpath_selector'], $row);
       }
+
+      foreach ($this->extraFields as $field_name => $selector) {
+        $result_row->$field_name = $this->executeRowQuery($xpath, $selector, $row);
+      }
+    }
+
+    if (!empty($this->sorts)) {
+      $this->executeSorts($view);
+    }
+
+    if (!empty($this->limit) || !empty($this->offset)) {
+      $view->result = array_slice($view->result, (int) $this->offset, (int) $this->limit);
     }
 
     $view->pager->postExecute($view->result);
     $view->pager->updatePageInfo();
+    $view->total_rows = $view->pager->getTotalItems();
 
     $view->execute_time = microtime(TRUE) - $start;
   }
@@ -406,6 +443,7 @@ class Xml extends QueryPluginBase {
       }
     }
 
+    // @todo Add headers to request.
     $response = $this->httpClient->get($uri);
 
     if ($response->getStatusCode() === 304) {
@@ -446,6 +484,9 @@ class Xml extends QueryPluginBase {
     }
   }
 
+  /**
+   * This is currently unused as it's a performance enhancement.
+   */
   protected function calculatePager(ViewExecutable $view) {
     if (empty($this->limit) && empty($this->offset)) {
       return;
@@ -455,6 +496,52 @@ class Xml extends QueryPluginBase {
     $offset = intval(!empty($this->offset) ? $this->offset : 0);
     $limit += $offset;
     $view->build_info['query'] .= "[position() > $offset and not(position() > $limit)]";
+  }
+
+  /**
+   * Executes an XPath query on a given row.
+   *
+   * @param \DOMXPath $xpath
+   *   The XPath object.
+   * @param string $selector
+   *   The XPath selector.
+   * @param \DOMNode $row
+   *   The row as.
+   *
+   * @return string[]
+   *   Returns a list of values from the row.
+   */
+  protected function executeRowQuery(\DOMXPath $xpath, $selector, \DOMNode $row) {
+    $node_list = $xpath->query($selector, $row);
+
+    if ($node_list === FALSE) {
+      return [];
+    }
+
+    $values = [];
+    foreach ($node_list as $node) {
+      $values[] = $node->nodeValue;
+    }
+
+    return $values;
+  }
+
+  /**
+   * Executes all added sorts to a view.
+   *
+   * @param \Drupal\views\ViewExecutable $view
+   *   The view to sort.
+   */
+  protected function executeSorts(ViewExecutable $view) {
+    foreach (array_reverse($this->sorts) as $sort) {
+      $sort($view->result);
+    }
+
+    // Re-number the indexes.
+    $index = 0;
+    foreach ($view->result as $row) {
+      $row->index = $index++;
+    }
   }
 
 }
