@@ -54,6 +54,13 @@ class Xml extends QueryPluginBase {
   protected $httpClient;
 
   /**
+   * The applied filters.
+   *
+   * @var XmlFilterInterface[]
+   */
+  protected $filters = [];
+
+  /**
    * The logger.
    *
    * @var \Psr\Log\LoggerInterface
@@ -171,6 +178,17 @@ class Xml extends QueryPluginBase {
     return $table;
   }
 
+
+  /**
+   * Adds an argument.
+   *
+   * @param \Drupal\views_xml_backend\Plugin\views\argument\XmlArgumentInterface $argument
+   *   The argument to add.
+   */
+  public function addArgument(XmlArgumentInterface $argument) {
+    $this->arguments[] = $argument;
+  }
+
   /**
    * Add a field to the query table, possibly with an alias. This will
    * automatically call ensureTable to make sure the required table
@@ -207,6 +225,17 @@ class Xml extends QueryPluginBase {
     }
 
     return $field;
+  }
+
+
+  /**
+   * Adds a filter.
+   *
+   * @param XmlFilterInterface $filter
+   *   The filter to add.
+   */
+  public function addFilter($filter) {
+    $this->filters[] = $filter;
   }
 
   /**
@@ -302,16 +331,6 @@ class Xml extends QueryPluginBase {
    */
   public function getCacheMaxAge() {
     return 0;
-  }
-
-  /**
-   * Adds an argument.
-   *
-   * @param \Drupal\views_xml_backend\Plugin\views\argument\XmlArgumentInterface $argument
-   *   The argument to add.
-   */
-  public function addArgument(XmlArgumentInterface $argument) {
-    $this->arguments[] = $argument;
   }
 
   /**
