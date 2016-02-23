@@ -12,44 +12,44 @@ function views_xml_backend_views_data() {
   $data = [];
   $data['xml']['table']['group'] = t('XML');
 
-  $data['xml']['table']['base'] = array(
+  $data['xml']['table']['base'] = [
     'title' => t('XML'),
     'help' => t('Queries an XML file.'),
     'query_id' => 'views_xml_backend',
-  );
+  ];
 
-  $data['xml']['xml_text'] = array(
+  $data['xml']['xml_text'] = [
     'title' => t('XML Text'),
     'help' => t('Text in the XML file.'),
-    'field' => array(
+    'field' => [
       'id' => 'xml_text',
-    ),
-    'argument' => array(
+    ],
+    'argument' => [
       'id' => 'string',
-    ),
-    'filter' => array(
+    ],
+    'filter' => [
       'id' => 'string',
-    ),
-    'sort' => array(
+    ],
+    'sort' => [
       'id' => 'standard',
-    ),
-  );
+    ],
+  ];
 
-  $data['xml']['xml_date'] = array(
+  $data['xml']['xml_date'] = [
     'title' => t('XML Date'),
     'help' => t('Date in the XML file.'),
-    'field' => array(
+    'field' => [
       'id' => 'xml_date',
-     ),
-  );
+     ],
+  ];
 
-  $data['xml']['xml_markup'] = array(
+  $data['xml']['xml_markup'] = [
     'title' => t('XML Markup Text'),
     'help' => t('Markup text in the XML file.'),
-    'field' => array(
+    'field' => [
       'id' => 'xml_markup',
-     ),
-  );
+     ],
+  ];
 
   return $data;
 }

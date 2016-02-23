@@ -26,8 +26,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * @ViewsQuery(
  *   id = "views_xml_backend",
  *   title = @Translation("XML Query"),
- *   help = @Translation("Query will be generated and run using the XML backend."),
- *   display_types = {"feed"}
+ *   help = @Translation("Query will be generated and run using the XML backend.")
  * )
  */
 class Xml extends QueryPluginBase {
@@ -97,10 +96,10 @@ class Xml extends QueryPluginBase {
   protected function defineOptions() {
     $options = parent::defineOptions();
 
-    $options['xml_file'] = array('default' => '');
-    $options['row_xpath'] = array('default' => '');
-    $options['default_namespace'] = array('default' => 'default');
-    $options['show_errors'] = array('default' => TRUE);
+    $options['xml_file'] = ['default' => ''];
+    $options['row_xpath'] = ['default' => ''];
+    $options['default_namespace'] = ['default' => 'default'];
+    $options['show_errors'] = ['default' => TRUE];
 
     return $options;
   }
@@ -111,32 +110,35 @@ class Xml extends QueryPluginBase {
   public function buildOptionsForm(&$form, FormStateInterface $form_state) {
     parent::buildOptionsForm($form, $form_state);
 
-    $form['xml_file'] = array(
+    $form['xml_file'] = [
       '#type' => 'textfield',
       '#title' => $this->t('XML File'),
       '#default_value' => $this->options['xml_file'],
       '#description' => $this->t('The URL or path to the XML file.'),
       '#maxlength' => 1024,
-    );
-    $form['row_xpath'] = array(
+    ];
+
+    $form['row_xpath'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Row Xpath'),
       '#default_value' => $this->options['row_xpath'],
       '#description' => $this->t('An xpath function that selects rows.'),
       '#required' => TRUE,
-    );
-    $form['default_namespace'] = array(
+    ];
+
+    $form['default_namespace'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Default namespace'),
       '#default_value' => $this->options['default_namespace'],
       '#description' => $this->t("If the xml contains a default namespace, it will be accessible as 'default:element'. If you want something different, declare it here."),
-    );
-    $form['show_errors'] = array(
+    ];
+
+    $form['show_errors'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Show XML errors'),
       '#default_value' => $this->options['show_errors'],
       '#description' => $this->t('If there were any errors during XML parsing, display them. It is recommended to leave this on during development.'),
-    );
+    ];
   }
 
   /**
@@ -188,15 +190,12 @@ class Xml extends QueryPluginBase {
    *   The name that this field can be referred to as.
    */
   public function addField($table, $field, $alias = '', $params = []) {
-    $alias = $field;
-
-    // Add field info array.
     if (empty($this->fields[$field])) {
-      $this->fields[$field] = array(
+      $this->fields[$field] = [
       'field' => $field,
       'table' => $table,
-      'alias' => $alias,
-      ) + $params;
+      'alias' => $field,
+      ] + $params;
     }
 
     return $field;
@@ -206,20 +205,18 @@ class Xml extends QueryPluginBase {
    * {@inheritdoc}
    */
   public function query($get_count = FALSE) {
-    $row_xpath = $this->options['row_xpath'];
-
     $filter_string = '';
+
     if (!empty($this->filter)) {
       $filters = [];
       foreach ($this->filter as $filter) {
         $filters[] = $filter->generate();
       }
-      /**
-       * @todo Add an option for the filters to be 'and' or 'or'.
-       */
+      // @todo Add an option for the filters to be 'and' or 'or'.
       $filter_string =  '[' . implode(' and ', $filters) . ']';
     }
-    return $row_xpath . ($filter_string ? $filter_string : '');
+
+    return $this->options['row_xpath'] . $filter_string;
   }
 
   /**
@@ -271,7 +268,7 @@ class Xml extends QueryPluginBase {
       $result_row->index = $index;
       $view->result[] = $result_row;
 
-      foreach ($view->field as $fieldname => $field) {
+      foreach ($view->field as $field_name => $field) {
         $node_list = $xpath->query($field->options['xpath_selector'], $row);
 
         if ($node_list === FALSE) {
@@ -282,7 +279,7 @@ class Xml extends QueryPluginBase {
         foreach ($node_list as $node) {
           $values[] = $node->nodeValue;
         }
-        $result_row->$fieldname = $values;
+        $result_row->$field_name = $values;
       }
     }
 
