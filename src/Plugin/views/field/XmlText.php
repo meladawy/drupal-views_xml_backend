@@ -10,7 +10,6 @@ namespace Drupal\views_xml_backend\Plugin\views\field;
 use Drupal\views\Plugin\views\field\FieldPluginBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\views\ResultRow;
-use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\SafeMarkup;
 
 /**

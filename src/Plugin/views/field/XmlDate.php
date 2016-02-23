@@ -69,6 +69,9 @@ class XmlDate extends XmlText {
     );
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function render(ResultRow $values) {
     $value = $values->{$this->options['id']};
 

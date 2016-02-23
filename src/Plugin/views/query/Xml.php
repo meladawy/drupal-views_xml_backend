@@ -8,9 +8,11 @@
 namespace Drupal\views_xml_backend\Plugin\views\query;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\views\Plugin\views\join\JoinPluginBase;
 use Drupal\views\Plugin\views\query\QueryPluginBase;
 use Drupal\views\ResultRow;
 use Drupal\views\ViewExecutable;
+use GuzzleHttp\Exception\RequestException;
 
 /**
  * Views query plugin for an XML query.
@@ -26,6 +28,9 @@ use Drupal\views\ViewExecutable;
  */
 class Xml extends QueryPluginBase {
 
+  /**
+   * {@inheritdoc}
+   */
   protected function defineOptions() {
     $options = parent::defineOptions();
 
@@ -38,7 +43,7 @@ class Xml extends QueryPluginBase {
   }
 
   /**
-   * Add settings for the ui.
+   * {@inheritdoc}
    */
   public function buildOptionsForm(&$form, FormStateInterface $form_state) {
     parent::buildOptionsForm($form, $form_state);
@@ -72,12 +77,53 @@ class Xml extends QueryPluginBase {
   }
 
   /**
-   * This is used by the field handler.
+   * Ensure a table exists in the queue; if it already exists it won't
+   * do anything, but if it doesn't it will add the table queue. It will ensure
+   * a path leads back to the relationship table.
+   *
+   * @param string $table
+   *   The unaliased name of the table to ensure.
+   * @param string $relationship
+   *   The relationship to ensure the table links to. Each relationship will
+   *   get a unique instance of the table being added. If not specified,
+   *   will be the primary table.
+   * @param \Drupal\views\Plugin\views\join\JoinPluginBase $join
+   *   A Join object (or derived object) to join the alias in.
+   *
+   * @return string
+   *   The alias used to refer to this specific table, or NULL if the table
+   *   cannot be ensured.
    */
   public function ensureTable($table, $relationship = NULL, JoinPluginBase $join = NULL) {
     return $table;
   }
 
+  /**
+   * Add a field to the query table, possibly with an alias. This will
+   * automatically call ensureTable to make sure the required table
+   * exists, *unless* $table is unset.
+   *
+   * @param string $table
+   *   The table this field is attached to. If NULL, it is assumed this will
+   *   be a formula; otherwise, ensureTable is used to make sure the
+   *   table exists.
+   * @param string $field
+   *   The name of the field to add. This may be a real field or a formula.
+   * @param string $alias
+   *   The alias to create. If not specified, the alias will be $table_$field
+   *   unless $table is NULL. When adding formulae, it is recommended that an
+   *   alias be used.
+   * @param array $params
+   *   An array of parameters additional to the field that will control items
+   *   such as aggregation functions and DISTINCT. Some values that are
+   *   recognized:
+   *   - function: An aggregation function to apply, such as SUM.
+   *   - aggregate: Set to TRUE to indicate that this value should be
+   *     aggregated in a GROUP BY.
+   *
+   * @return string
+   *   The name that this field can be referred to as.
+   */
   public function addField($table, $field, $alias = '', $params = array()) {
     $alias = $field;
 
@@ -94,13 +140,9 @@ class Xml extends QueryPluginBase {
   }
 
   /**
-   * Generate a query and a countquery from all of the information supplied to
-   * the object.
-   *
-   * @param $get_count
-   *   Provide a countquery if this is true, otherwise provide a normal query.
+   * {@inheritdoc}
    */
-  function query($get_count = FALSE) {
+  public function query($get_count = FALSE) {
     $row_xpath = $this->options['row_xpath'];
 
     $filter_string = '';
@@ -118,9 +160,9 @@ class Xml extends QueryPluginBase {
   }
 
   /**
-   * Builds the necessary info to execute the query.
+   * {@inheritdoc}
    */
-  function build(ViewExecutable $view) {
+  public function build(ViewExecutable $view) {
     $view->initPager();
 
     // Let the pager modify the query to add limits.
@@ -128,19 +170,12 @@ class Xml extends QueryPluginBase {
 
     $view->build_info['query'] = $this->query();
     $view->build_info['count_query'] = '';
-
-    // Store the view in the object to be able to use it later.
-    $this->view = $view;
   }
 
   /**
-   * Executes the query and fills the associated view object with according
-   * values.
-   *
-   * Values to set: $view->result, $view->total_rows, $view->execute_time,
-   * $view->current_page.
+   * {@inheritdoc}
    */
-  function execute(ViewExecutable $view) {
+  public function execute(ViewExecutable $view) {
     $start = microtime(TRUE);
 
     // Make sure that an xml file exists. This could happen if you come from the
@@ -162,7 +197,7 @@ class Xml extends QueryPluginBase {
 
     $xpath = new \DOMXPath($doc);
 
-      // Register namespaces.
+    // Register namespaces.
     $simple = simplexml_import_dom($doc);
     if (!$simple) {
       return;
@@ -197,7 +232,7 @@ class Xml extends QueryPluginBase {
       $rows = $xpath->query($view->build_info['query']);
 
       $result = array();
-      foreach ($rows as $row) {
+      foreach ($rows as $index => $row) {
         $item = array();
         foreach ($view->field as $fieldname => $field) {
           $node_list = $xpath->evaluate($field->options['xpath_selector'], $row);
@@ -216,7 +251,9 @@ class Xml extends QueryPluginBase {
             }
           }
         }
-        $result[] = new ResultRow($item);
+        $row = new ResultRow($item);
+        $row->index = $index;
+        $view->result[] = $row;
       }
     }
     catch (Exception $e) {
@@ -228,10 +265,22 @@ class Xml extends QueryPluginBase {
         debug($e->getMessage(), 'Views XML Backend');
       }
     }
-
-    $this->view->result = $result;
   }
 
+  /**
+   * Returns the contents of an XML file.
+   *
+   * @param string $uri
+   *   A URL, or local file path.
+   *
+   * @return string
+   *   The contents of the XML file.
+   *
+   * @throws \Exception
+   *   Thrown when an error occurs.
+   *
+   * @todo Make the exceptions more meaningful.
+   */
   protected function fetchFile($uri) {
     $parsed = parse_url($uri);
 
@@ -248,7 +297,7 @@ class Xml extends QueryPluginBase {
 
     $destination = 'public://views_xml_backend';
     if (!file_prepare_directory($destination, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS)) {
-      throw new Exception(t('Views XML Backend directory either cannot be created or is not writable.'));
+      throw new \Exception(t('Views XML Backend directory either cannot be created or is not writable.'));
     }
 
     $headers = array();
@@ -275,14 +324,13 @@ class Xml extends QueryPluginBase {
         if (file_exists($cache_file_uri)) {
           return file_get_contents($cache_file_uri);
         }
-        // We have the headers but no cache file. :(
-        // Run it back.
+        // We have the headers but no cache file. Run it back.
         \Drupal::cache()->set($cache_file, NULL);
         return $this->fetch_file($uri);
       }
 
       file_unmanaged_save_data($data, $cache_file_uri, FILE_EXISTS_REPLACE);
-      \Drupal::cache()->set($cache_file, $result->headers);
+      \Drupal::cache()->set($cache_file, $response->getHeaders());
       return $data;
     }
     catch (RequestException $e) {
