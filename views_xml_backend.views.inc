@@ -9,7 +9,7 @@
  * Implements hook_views_data().
  */
 function views_xml_backend_views_data() {
-  $data = array();
+  $data = [];
   $data['xml']['table']['group'] = t('XML');
 
   $data['xml']['table']['base'] = array(
