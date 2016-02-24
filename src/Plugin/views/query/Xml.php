@@ -9,6 +9,7 @@ namespace Drupal\views_xml_backend\Plugin\views\query;
 
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Site\Settings;
 use Drupal\views\Plugin\views\join\JoinPluginBase;
 use Drupal\views\Plugin\views\query\QueryPluginBase;
 use Drupal\views\ResultRow;
@@ -34,6 +35,13 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * )
  */
 class Xml extends QueryPluginBase {
+
+  /**
+   * The default cache directory.
+   *
+   * @var string
+   */
+  const DEFAULT_CACHE_DIR = 'public://views_xml_backend';
 
   /**
    * A list of added arguments.
@@ -555,7 +563,7 @@ class Xml extends QueryPluginBase {
    *   The file contents.
    */
   protected function fetchRemoteFile($uri) {
-    $destination = 'public://views_xml_backend';
+    $destination = Settings::get('views_xml_backend_cache_directory', static::DEFAULT_CACHE_DIR);
 
     if (!file_prepare_directory($destination, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS)) {
       $this->messenger->setMessage($this->t('File cache directory either cannot be created or is not writable.'), 'error');

@@ -1,0 +1,30 @@
+<?php
+
+/**
+ * @file
+ * Hook implementations for views_xml_backend.
+ */
+
+use Drupal\Core\Site\Settings;
+use Drupal\views_xml_backend\Plugin\views\query\Xml;
+
+/**
+ * Implements hook_cron().
+ */
+function views_xml_backend_cron() {
+  // Find old cache files and delete them. Default to one week.
+  $expiration = Settings::get('views_xml_backend_expire', 604800);
+  $directory = Settings::get('views_xml_backend_cache_directory', Xml::DEFAULT_CACHE_DIR);
+  $file_system = \Drupal::service('file_system');
+
+  // Cache files are sha256 hashes without an extension.
+  foreach (file_scan_directory($directory, '/^[a-z0-9]+$/') as $file) {
+    if (!$mtime = filemtime($file->uri)) {
+      continue;
+    }
+
+    if ($mtime < REQUEST_TIME - $expiration) {
+      $file_system->unlink($file->uri);
+    }
+  }
+}
