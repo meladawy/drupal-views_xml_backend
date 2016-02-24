@@ -25,7 +25,7 @@ class Standard extends SortPluginBase {
    */
   public function query() {
     $alias = 'sort_string_' . $this->realField;
-    $this->query->addField($alias, $this->options['xpath']);
+    $this->query->addField($alias, $this->options['xpath_selector']);
     $this->query->addSort(new StringSorter($alias, $this->options['order']));
   }
 
