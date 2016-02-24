@@ -48,6 +48,13 @@ class Xml extends QueryPluginBase {
   protected $cacheBackend;
 
   /**
+   * Error messages that result from XML parsing.
+   *
+   * @var array
+   */
+  protected $errorMessages = [];
+
+  /**
    * Extra fields to query. Added from sorters.
    *
    * @var string[]
@@ -126,10 +133,10 @@ class Xml extends QueryPluginBase {
   protected function defineOptions() {
     $options = parent::defineOptions();
 
-    $options['xml_file'] = ['default' => ''];
-    $options['row_xpath'] = ['default' => ''];
-    $options['default_namespace'] = ['default' => 'default'];
-    $options['show_errors'] = ['default' => TRUE];
+    $options['xml_file']['default'] = '';
+    $options['row_xpath']['default'] = '';
+    $options['default_namespace']['default'] = 'default';
+    $options['show_errors']['default'] = TRUE;
 
     return $options;
   }
@@ -302,25 +309,33 @@ class Xml extends QueryPluginBase {
   public function execute(ViewExecutable $view) {
     $start = microtime(TRUE);
 
-    // Make sure that an xml file exists. This could happen if you come from the
-    // add wizard to the actual views edit page.
-    if (empty($this->options['xml_file'])) {
-      return FALSE;
+    $use_errors = $this->startXmlErrorHandling();
+
+    try {
+      $this->doExecute($view);
+    }
+    catch (\RuntimeException $e) {
+      drupal_set_message($e->getMessage(), 'error');
     }
 
-    $data = new \stdClass();
-    $data->contents = $this->fetchFile($this->options['xml_file']);
-    \Drupal::moduleHandler()->alter('views_xml_backend_data', $data, $view->name);
+    $this->stopXmlErrorHandling($use_errors);
 
-    $doc = new \DOMDocument();
-    $success = $doc->loadXML($data->contents);
-    // If the file fails to load, bail.
-    if (!$success) {
-      return;
-    }
+    $view->execute_time = microtime(TRUE) - $start;
+  }
 
-    $xpath = new \DOMXPath($doc);
-    $this->registerNamespaces($xpath);
+  /**
+   * Performs the actual view execution.
+   *
+   * @param ViewExecutable $view
+   *   The view to execute.
+   *
+   * @throws \RuntimeException
+   *   Thrown if an error occured duing execution.
+   *
+   * @see Xml::execute()
+   */
+  protected function doExecute(ViewExecutable $view) {
+    $xpath = $this->getXpath($this->fetchFileContents($this->options['xml_file']));
 
     if ($view->pager->useCountQuery() || !empty($view->get_total_rows)) {
       // Normall we would call $view->pager->executeCountQuery($count_query);
@@ -354,8 +369,6 @@ class Xml extends QueryPluginBase {
     $view->pager->postExecute($view->result);
     $view->pager->updatePageInfo();
     $view->total_rows = $view->pager->getTotalItems();
-
-    $view->execute_time = microtime(TRUE) - $start;
   }
 
   /**
@@ -363,6 +376,101 @@ class Xml extends QueryPluginBase {
    */
   public function getCacheMaxAge() {
     return 0;
+  }
+
+  /**
+   * Starts custom error handling.
+   */
+  protected function startXmlErrorHandling() {
+    libxml_clear_errors();
+    return libxml_use_internal_errors(TRUE);
+  }
+
+  /**
+   * Stops custom error handling.
+   *
+   * @param bool $use_errors
+   *   The previous value of libxml_use_internal_errors().
+   */
+  protected function stopXmlErrorHandling($use_errors) {
+    foreach (libxml_get_errors() as $error) {
+      $this->errorMessages[$error->level][] = [
+        'message' => trim($error->message),
+        'line' => $error->line,
+        'code' => $error->code,
+      ];
+    }
+
+    libxml_use_internal_errors($use_errors);
+    libxml_clear_errors();
+  }
+
+  /**
+   * Returns the XPath object for this query.
+   *
+   * @param string $contents
+   *   The XML file contents.
+   *
+   * @return \DOMXPath
+   *   An XPath object.
+   */
+  protected function getXpath($contents) {
+    if ($contents === '') {
+      return new \DOMXPath(new \DOMDocument());
+    }
+
+    $xpath = new \DOMXPath($this->createDomDocument($contents));
+
+    $this->registerNamespaces($xpath);
+
+    return $xpath;
+  }
+
+  /**
+   * Creates a very forgiving DOMDocument.
+   *
+   * @param string $contents
+   *   The XML content of the DOMDocument.
+   *
+   * @return \DOMDocument
+   *   A new DOMDocument.
+   */
+  protected function createDomDocument($contents) {
+    // Try to make the XML loading as forgiving as possible.
+    $document = new \DOMDocument();
+    $document->strictErrorChecking = FALSE;
+    $document->resolveExternals = FALSE;
+    // Libxml specific.
+    $document->substituteEntities = TRUE;
+    $document->recover = TRUE;
+
+    $options = LIBXML_NONET;
+
+    if (defined('LIBXML_COMPACT')) {
+      $options |= LIBXML_COMPACT;
+    }
+    if (defined('LIBXML_PARSEHUGE')) {
+      $options |= LIBXML_PARSEHUGE;
+    }
+    if (defined('LIBXML_BIGLINES')) {
+      $options |= LIBXML_BIGLINES;
+    }
+
+    // @see http://symfony.com/blog/security-release-symfony-2-0-11-released
+    $disable_entities = libxml_disable_entity_loader(TRUE);
+
+    $document->loadXML($contents, $options);
+
+    // @see http://symfony.com/blog/security-release-symfony-2-0-17-released
+    foreach ($document->childNodes as $child) {
+      if ($child->nodeType === XML_DOCUMENT_TYPE_NODE) {
+        throw new \RuntimeException($this->t('Suspicious document types are not allowed.'));
+      }
+    }
+
+    libxml_disable_entity_loader($disable_entities);
+
+    return $document;
   }
 
   /**
@@ -379,7 +487,12 @@ class Xml extends QueryPluginBase {
    *
    * @todo Make the exceptions more meaningful.
    */
-  protected function fetchFile($uri) {
+  protected function fetchFileContents($uri) {
+    // Check to see if the URI has length.
+    if ($uri === '') {
+      throw new \RuntimeException($this->t('Please enter a file path or URL in the query settings.'));
+    }
+
     $parsed = parse_url($uri);
 
     // Check for local file.
@@ -464,7 +577,7 @@ class Xml extends QueryPluginBase {
    *   The XPath object.
    */
   protected function registerNamespaces(\DOMXPath $xpath) {
-    if (!$simple = simplexml_import_dom($xpath->document)) {
+    if (!$simple = @simplexml_import_dom($xpath->document)) {
       return;
     }
 

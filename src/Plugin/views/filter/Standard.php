@@ -33,6 +33,7 @@ class Standard extends StringFilter {
   public function defineOptions() {
     $options = parent::defineOptions();
 
+    // @todo Add case sensitive option.
     $options['case']['default'] = TRUE;
     $options['xpath_selector']['default'] = '';
 
