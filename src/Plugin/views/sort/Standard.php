@@ -9,8 +9,7 @@ namespace Drupal\views_xml_backend\Plugin\views\sort;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\views\Plugin\views\sort\SortPluginBase;
-use Drupal\views\ResultRow;
-use Drupal\views\ViewExecutable;
+use Drupal\views_xml_backend\Sorter\StringSorter;
 
 /**
  * Default implementation of the base sort plugin.
@@ -25,7 +24,9 @@ class Standard extends SortPluginBase {
    * {@inheritdoc}
    */
   public function query() {
-    $this->query->addSort('sort_' . $this->realField, $this->options['xpath_selector'], $this);
+    $alias = 'sort_string_' . $this->realField;
+    $this->query->addField($alias, $this->options['xpath']);
+    $this->query->addSort(new StringSorter($alias, $this->options['order']));
   }
 
   /**
@@ -51,25 +52,6 @@ class Standard extends SortPluginBase {
     ];
 
     parent::buildOptionsForm($form, $form_state);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function __invoke(array &$result) {
-    $alias = 'sort_' . $this->realField;
-
-    if ($this->options['order'] === 'ASC') {
-      uasort($result, function (ResultRow $a, ResultRow $b) use ($alias) {
-        return strcasecmp(reset($a->$alias), reset($b->$alias));
-      });
-    }
-
-    else {
-      uasort($result, function (ResultRow $a, ResultRow $b) use ($alias) {
-        return strcasecmp(reset($b->$alias), reset($a->$alias));
-      });
-    }
   }
 
 }

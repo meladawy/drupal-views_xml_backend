@@ -204,6 +204,18 @@ class Xml extends QueryPluginBase {
   }
 
   /**
+   * Adds a new field to be queried.
+   *
+   * @param string $field
+   *   The field name.
+   * @param string $xpath
+   *   The XPath selector to query the field value.
+   */
+  public function addField($field, $xpath) {
+    $this->extraFields[$field] = $xpath;
+  }
+
+  /**
    * Adds a filter.
    *
    * @param XmlFilterInterface $filter
@@ -237,36 +249,18 @@ class Xml extends QueryPluginBase {
   public function addOrderBy($table, $field = NULL, $order = 'ASC', $alias = '', $params = []) {
     if ($table === 'rand') {
       $this->sorts[] = 'shuffle';
-      return;
-    }
-
-    if (empty($alias)) {
-      return;
-    }
-
-    // Quick hack to support click sorting. We should align this with the sort
-    // plugins.
-    switch (strtoupper($order)) {
-      case 'ASC':
-        $this->sorts[] = function (array &$result) use ($alias) {
-          usort($result, function (ResultRow $a, ResultRow $b) use ($alias) {
-            return strcasecmp(reset($a->$alias), reset($b->$alias));
-          });
-        };
-        break;
-
-      case 'DESC':
-        $this->sorts[] = function (array &$result) use ($alias) {
-          usort($result, function (ResultRow $a, ResultRow $b) use ($alias) {
-            return strcasecmp(reset($b->$alias), reset($a->$alias));
-          });
-        };
-        break;
     }
   }
 
-  public function addSort($field, $xpath, $callback) {
-    $this->extraFields[$field] = $xpath;
+  /**
+   * Adds a sorter callable.
+   *
+   * @param callable $callback
+   *   A callable that can sort a views result.
+   *
+   * @see \Drupal\views_xml_backend\Sorter\SorterInterface.
+   */
+  public function addSort($callback) {
     $this->sorts[] = $callback;
   }
 

@@ -10,6 +10,7 @@ namespace Drupal\views_xml_backend\Plugin\views\field;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\views\Plugin\views\field\Date;
 use Drupal\views\ResultRow;
+use Drupal\views_xml_backend\Sorter\StringSorter;
 
 /**
  * A handler to provide an XML date field.
@@ -52,6 +53,13 @@ class XmlDate extends Date {
     }
 
     return $this->renderXmlRow($output_values);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function clickSort($order) {
+    $this->query->addSort(new StringSorter($this->realField, $order));
   }
 
 }

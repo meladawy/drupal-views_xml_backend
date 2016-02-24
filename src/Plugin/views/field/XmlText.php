@@ -7,9 +7,10 @@
 
 namespace Drupal\views_xml_backend\Plugin\views\field;
 
-use Drupal\views\Plugin\views\field\FieldPluginBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\views\Plugin\views\field\FieldPluginBase;
 use Drupal\views\ResultRow;
+use Drupal\views_xml_backend\Sorter\StringSorter;
 
 /**
  * A handler to provide an XML text field.
@@ -43,6 +44,13 @@ class XmlText extends FieldPluginBase {
    */
   public function render(ResultRow $values) {
     return $this->renderXmlRow($this->getXmlListValue($values));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function clickSort($order) {
+    $this->query->addSort(new StringSorter($this->realField, $order));
   }
 
 }
