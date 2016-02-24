@@ -13,6 +13,8 @@ use Drupal\views\Plugin\views\join\JoinPluginBase;
 use Drupal\views\Plugin\views\query\QueryPluginBase;
 use Drupal\views\ResultRow;
 use Drupal\views\ViewExecutable;
+use Drupal\views_xml_backend\Messenger;
+use Drupal\views_xml_backend\MessengerInterface;
 use Drupal\views_xml_backend\Plugin\views\argument\XmlArgumentInterface;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\RequestException;
@@ -83,6 +85,13 @@ class Xml extends QueryPluginBase {
   protected $logger;
 
   /**
+   * The messenger used for drupal_set_message().
+   *
+   * @var \Drupal\views_xml_backend\MessengerInterface
+   */
+  protected $messenger;
+
+  /**
    * The applied sorts.
    *
    * @var callable[]
@@ -105,12 +114,13 @@ class Xml extends QueryPluginBase {
    * @param \Psr\Log\LoggerInterface
    *   The logger.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, ClientInterface $http_client, CacheBackendInterface $cache_backend, LoggerInterface $logger) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, ClientInterface $http_client, CacheBackendInterface $cache_backend, LoggerInterface $logger, MessengerInterface $messenger) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
 
     $this->httpClient = $http_client;
     $this->cacheBackend = $cache_backend;
     $this->logger = $logger;
+    $this->messenger = $messenger;
   }
 
   /**
@@ -123,7 +133,8 @@ class Xml extends QueryPluginBase {
       $plugin_definition,
       $container->get('http_client'),
       $container->get('cache.default'),
-      $container->get('logger.factory')->get('views_xml_backend')
+      $container->get('logger.factory')->get('views_xml_backend'),
+      new Messenger()
     );
   }
 
@@ -311,12 +322,7 @@ class Xml extends QueryPluginBase {
 
     $use_errors = $this->startXmlErrorHandling();
 
-    try {
-      $this->doExecute($view);
-    }
-    catch (\RuntimeException $e) {
-      drupal_set_message($e->getMessage(), 'error');
-    }
+    $this->doExecute($view);
 
     $this->stopXmlErrorHandling($use_errors);
 
@@ -328,9 +334,6 @@ class Xml extends QueryPluginBase {
    *
    * @param ViewExecutable $view
    *   The view to execute.
-   *
-   * @throws \RuntimeException
-   *   Thrown if an error occured duing execution.
    *
    * @see Xml::execute()
    */
@@ -385,6 +388,7 @@ class Xml extends QueryPluginBase {
    */
   protected function startXmlErrorHandling() {
     libxml_clear_errors();
+
     return libxml_use_internal_errors(TRUE);
   }
 
@@ -481,7 +485,13 @@ class Xml extends QueryPluginBase {
     // @see http://symfony.com/blog/security-release-symfony-2-0-17-released
     foreach ($document->childNodes as $child) {
       if ($child->nodeType === XML_DOCUMENT_TYPE_NODE) {
-        throw new \RuntimeException($this->t('Suspicious document types are not allowed.'));
+        $this->messenger->setMessage($this->t('A suspicious document was detected.'), 'error');
+        // @todo Add more context. The specific view? A link to the page?
+        $this->logger->error('A suspicious document was detected.');
+
+        // Overwrite the document to allow processing to continue.
+        $document = new \DOMDocument();
+        break;
       }
     }
 
@@ -498,16 +508,11 @@ class Xml extends QueryPluginBase {
    *
    * @return string
    *   The contents of the XML file.
-   *
-   * @throws \RuntimeException
-   *   Thrown when an error occurs.
-   *
-   * @todo Make the exceptions more meaningful.
    */
   protected function fetchFileContents($uri) {
-    // Check to see if the URI has length.
     if ($uri === '') {
-      throw new \RuntimeException($this->t('Please enter a file path or URL in the query settings.'));
+      $this->messenger->setMessage($this->t('Please enter a file path or URL in the query settings.'));
+      return '';
     }
 
     $parsed = parse_url($uri);
@@ -534,7 +539,10 @@ class Xml extends QueryPluginBase {
       return file_get_contents($uri);
     }
 
-    throw new \RuntimeException($this->t('Local file not found: @uri', ['@uri' => $uri]));
+    $this->messenger->setMessage($this->t('Local file not found: @uri', ['@uri' => $uri]), 'error');
+    $this->logger->error('Local file not found: @uri', ['@uri' => $uri]);
+
+    return '';
   }
 
   /**
@@ -549,8 +557,12 @@ class Xml extends QueryPluginBase {
   protected function fetchRemoteFile($uri) {
     $destination = 'public://views_xml_backend';
 
+    // @todo Allow this to continue while setting messages.
     if (!file_prepare_directory($destination, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS)) {
-      throw new \RuntimeException($this->t('Views XML Backend directory either cannot be created or is not writable.'));
+      $this->messenger->setMessage($this->t('File cache directory either cannot be created or is not writable.'), 'error');
+      $this->logger->error('File cache directory either cannot be created or is not writable.');
+
+      return '';
     }
 
     $cache_file = 'views_xml_backend_' . hash('sha256', $uri);
