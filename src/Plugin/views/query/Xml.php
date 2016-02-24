@@ -335,7 +335,7 @@ class Xml extends QueryPluginBase {
    * @see Xml::execute()
    */
   protected function doExecute(ViewExecutable $view) {
-    $xpath = $this->getXpath($this->fetchFileContents($this->options['xml_file']));
+    $xpath = $this->getXpath($this->fetchFileContents($this->getXmlDocumentPath($view)));
 
     if ($view->pager->useCountQuery() || !empty($view->get_total_rows)) {
       // Normall we would call $view->pager->executeCountQuery($count_query);
@@ -363,6 +363,8 @@ class Xml extends QueryPluginBase {
     }
 
     if (!empty($this->limit) || !empty($this->offset)) {
+      // @todo Re-implement the performance optimization. For the case with no
+      // sorts, we can avoid parsing the whole file.
       $view->result = array_slice($view->result, (int) $this->offset, (int) $this->limit);
     }
 
@@ -403,6 +405,21 @@ class Xml extends QueryPluginBase {
 
     libxml_use_internal_errors($use_errors);
     libxml_clear_errors();
+  }
+
+  /**
+   * Returns the path to the XML file after token substitution.
+   *
+   * @param \Drupal\views\ViewExecutable $view
+   *   The view.
+   *
+   * @return string
+   *   The file path or URL.
+   */
+  protected function getXmlDocumentPath(ViewExecutable $view) {
+    // This should be safe from malicious user input since the URL is internal
+    // and an invalid one will just produce a download error.
+    return strtr($this->options['xml_file'], $view->getDisplay()->getArgumentsTokens());
   }
 
   /**

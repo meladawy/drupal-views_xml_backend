@@ -22,15 +22,6 @@ class Passthrough extends ArgumentPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function buildOptionsForm(&$form, FormStateInterface $form_state) {
-    parent::buildOptionsForm($form, $form_state);
-
-    unset($form['exception']);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function query($group_by = FALSE) {
     // Prevent this query from being added.
   }

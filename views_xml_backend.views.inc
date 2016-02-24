@@ -52,7 +52,7 @@ function views_xml_backend_views_data() {
   $data['views_xml_backend']['passthrough'] = [
     'title' => t('Pass through'),
     'help' => t('This argument handler does not filter any values. It can be used to pass in values from an argument into token replacements.'),
-    'argument' => ['handler' => 'views_xml_backend_passthrough'],
+    'argument' => ['id' => 'views_xml_backend_passthrough'],
   ];
 
   return $data;
