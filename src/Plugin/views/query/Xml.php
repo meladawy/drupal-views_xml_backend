@@ -132,7 +132,7 @@ class Xml extends QueryPluginBase {
       $plugin_id,
       $plugin_definition,
       $container->get('http_client'),
-      $container->get('cache.default'),
+      $container->get('cache.views_xml_backend_download'),
       $container->get('logger.factory')->get('views_xml_backend'),
       new Messenger()
     );
@@ -564,12 +564,12 @@ class Xml extends QueryPluginBase {
       return (string) $this->doGetRequest($uri)->getBody();
     }
 
-    $cache_file = 'views_xml_backend_' . hash('sha256', $uri);
-    $cache_file_uri = "$destination/$cache_file";
+    $cache_key = hash('sha256', $uri);
+    $cache_file = "$destination/$cache_key";
 
     $options = [];
     // Add cached headers if requested.
-    if ($cache = $this->cacheBackend->get($cache_file)) {
+    if ($cache = $this->cacheBackend->get($cache_key)) {
       if (isset($cache->data['etag'])) {
         $options[RequestOptions::HEADERS]['If-None-Match'] = $cache->data['etag'];
       }
@@ -581,26 +581,26 @@ class Xml extends QueryPluginBase {
     $response = $this->doGetRequest($uri, $options);
 
     if ($response->getStatusCode() === 304) {
-      if (file_exists($cache_file_uri)) {
-        return file_get_contents($cache_file_uri);
+      if (file_exists($cache_file)) {
+        return file_get_contents($cache_file);
       }
       // We have the headers but no cache file. Run it again.
-      $this->cacheBackend->delete($cache_file);
+      $this->cacheBackend->delete($cache_key);
 
       return $this->fetchRemoteFile($uri);
     }
 
     // We had a failed requset. Try to return the old result.
     if ($response->getStatusCode() === -100) {
-      if (file_exists($cache_file_uri)) {
-        return file_get_contents($cache_file_uri);
+      if (file_exists($cache_file)) {
+        return file_get_contents($cache_file);
       }
     }
 
     $data = trim($response->getBody());
 
-    file_unmanaged_save_data($data, $cache_file_uri, FILE_EXISTS_REPLACE);
-    $this->cacheBackend->set($cache_file, array_change_key_case($response->getHeaders()));
+    file_unmanaged_save_data($data, $cache_file, FILE_EXISTS_REPLACE);
+    $this->cacheBackend->set($cache_key, array_change_key_case($response->getHeaders()));
 
     return $data;
   }
