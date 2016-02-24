@@ -17,7 +17,7 @@ use Drupal\views_xml_backend\Messenger;
 use Drupal\views_xml_backend\MessengerInterface;
 use Drupal\views_xml_backend\Plugin\views\argument\XmlArgumentInterface;
 use GuzzleHttp\ClientInterface;
-use GuzzleHttp\Exception\RequestException;
+use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\RequestOptions;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -557,12 +557,11 @@ class Xml extends QueryPluginBase {
   protected function fetchRemoteFile($uri) {
     $destination = 'public://views_xml_backend';
 
-    // @todo Allow this to continue while setting messages.
     if (!file_prepare_directory($destination, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS)) {
       $this->messenger->setMessage($this->t('File cache directory either cannot be created or is not writable.'), 'error');
       $this->logger->error('File cache directory either cannot be created or is not writable.');
 
-      return '';
+      return (string) $this->doGetRequest($uri)->getBody();
     }
 
     $cache_file = 'views_xml_backend_' . hash('sha256', $uri);
@@ -579,7 +578,7 @@ class Xml extends QueryPluginBase {
       }
     }
 
-    $response = $this->httpClient->get($uri, $options);
+    $response = $this->doGetRequest($uri, $options);
 
     if ($response->getStatusCode() === 304) {
       if (file_exists($cache_file_uri)) {
@@ -591,12 +590,44 @@ class Xml extends QueryPluginBase {
       return $this->fetchRemoteFile($uri);
     }
 
+    // We had a failed requset. Try to return the old result.
+    if ($response->getStatusCode() === -100) {
+      if (file_exists($cache_file_uri)) {
+        return file_get_contents($cache_file_uri);
+      }
+    }
+
     $data = trim($response->getBody());
 
     file_unmanaged_save_data($data, $cache_file_uri, FILE_EXISTS_REPLACE);
     $this->cacheBackend->set($cache_file, array_change_key_case($response->getHeaders()));
 
     return $data;
+  }
+
+  /**
+   * Performs a GET request.
+   *
+   * @param string $url
+   *   The URL to GET.
+   * @param array $options
+   *   Options to pass to Guzzle.
+   *
+   * @return \Psr\Http\Message\ResponseInterface
+   *   An HTTP response.
+   */
+  protected function doGetRequest($url, $options = []) {
+    try {
+      return $this->httpClient->get($url, $options);
+    }
+    catch (\RuntimeException $e) {
+      // @todo We can add more granular error messages based on Guzzle exception
+      // types. We could also display this error with dsm() if we're in preview.
+      $this->logger->error('An error occured while downloading @url: %message.', ['@url' => $url, '%message' => $e->getMessage()]);
+    }
+
+    // Fake a response.
+    return new Response(-100, [], '');
   }
 
   /**
