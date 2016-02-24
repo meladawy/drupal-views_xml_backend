@@ -42,8 +42,8 @@ class Standard extends FieldPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function render(ResultRow $values) {
-    return $this->renderXmlRow($this->getXmlListValue($values));
+  public function render(ResultRow $row) {
+    return $this->renderXmlRow($this->getValue($row));
   }
 
   /**

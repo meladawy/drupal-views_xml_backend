@@ -93,11 +93,9 @@ class Markup extends Standard {
    * {@inheritdoc}
    */
   public function render(ResultRow $row) {
-    $values = $this->getXmlListValue($row);
-
     $output_values = [];
 
-    foreach ($values as $value) {
+    foreach ($this->getValue($row) as $value) {
       $value = str_replace('<!--break-->', '', $value);
 
       $output_values[] = check_markup($value, $this->options['format']);

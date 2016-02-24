@@ -43,13 +43,12 @@ class Date extends ViewsDate {
    * {@inheritdoc}
    */
   public function render(ResultRow $row) {
-    $values = $this->getXmlListValue($row);
-
     $output_values = [];
+    $tmp_row = new ResultRow();
 
-    foreach ($values as $value) {
-      $row->{$this->field_alias} = $value;
-      $output_values[] = parent::render($row);
+    foreach ($this->getValue($row) as $value) {
+      $tmp_row->{$this->field_alias} = $value;
+      $output_values[] = parent::render($tmp_row);
     }
 
     return $this->renderXmlRow($output_values);

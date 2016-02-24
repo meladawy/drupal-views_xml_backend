@@ -27,7 +27,7 @@ trait XmlFieldHelperTrait {
    * Called to add the field to a query.
    */
   public function query() {
-    $this->field_alias = $this->realField;
+    $this->field_alias = $this->options['id'];
   }
 
   /**
@@ -36,10 +36,10 @@ trait XmlFieldHelperTrait {
   protected function getDefaultXmlOptions() {
     $options = [];
 
-    $options['xpath_selector'] = ['default' => ''];
-    $options['multiple'] = ['default' => FALSE];
-    $options['list_type'] = ['default' => 'ul'];
-    $options['custom_separator'] = ['default' => ', '];
+    $options['xpath_selector']['default'] = '';
+    $options['multiple']['default'] = FALSE;
+    $options['list_type']['default'] = 'ul';
+    $options['custom_separator']['default'] = ', ';
 
     return $options;
   }
@@ -119,12 +119,6 @@ trait XmlFieldHelperTrait {
       '#items' => $values,
       '#list_type' => $this->options['list_type'],
     ];
-  }
-
-  protected function getXmlListValue(ResultRow $row) {
-    $values = $this->getValue($row);
-
-    return is_array($values) ? $values : [$values];
   }
 
 }
