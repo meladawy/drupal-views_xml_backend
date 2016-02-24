@@ -2,24 +2,24 @@
 
 /**
  * @file
- * Contains \Drupal\views_xml_backend\Plugin\views\field\XmlText.
+ * Contains \Drupal\views_xml_backend\Plugin\views\field\Date.
  */
 
 namespace Drupal\views_xml_backend\Plugin\views\field;
 
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\views\Plugin\views\field\FieldPluginBase;
+use Drupal\views\Plugin\views\field\Date as ViewsDate;
 use Drupal\views\ResultRow;
 use Drupal\views_xml_backend\Sorter\StringSorter;
 
 /**
- * A handler to provide an XML text field.
+ * A handler to provide an XML date field.
  *
  * @ingroup views_field_handlers
  *
- * @ViewsField("xml_text")
+ * @ViewsField("views_xml_backend_date")
  */
-class XmlText extends FieldPluginBase {
+class Date extends ViewsDate {
 
   use XmlFieldHelperTrait;
 
@@ -42,8 +42,17 @@ class XmlText extends FieldPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function render(ResultRow $values) {
-    return $this->renderXmlRow($this->getXmlListValue($values));
+  public function render(ResultRow $row) {
+    $values = $this->getXmlListValue($row);
+
+    $output_values = [];
+
+    foreach ($values as $value) {
+      $row->{$this->field_alias} = $value;
+      $output_values[] = parent::render($row);
+    }
+
+    return $this->renderXmlRow($output_values);
   }
 
   /**

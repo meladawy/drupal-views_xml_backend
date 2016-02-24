@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\views_xml_backend\Plugin\views\field\XmlMarkup.
+ * Contains \Drupal\views_xml_backend\Plugin\views\field\Markup.
  */
 
 namespace Drupal\views_xml_backend\Plugin\views\field;
@@ -18,9 +18,9 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *
  * @ingroup views_field_handlers
  *
- * @ViewsField("xml_markup")
+ * @ViewsField("views_xml_backend_markup")
  */
-class XmlMarkup extends XmlText {
+class Markup extends Standard {
 
   /**
    * The current user.
@@ -30,7 +30,7 @@ class XmlMarkup extends XmlText {
   protected $currentUser;
 
   /**
-   * Constructs a new XmlMarkup object.
+   * Constructs a new Markup object.
    *
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
