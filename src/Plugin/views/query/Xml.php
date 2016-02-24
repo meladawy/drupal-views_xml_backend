@@ -16,6 +16,7 @@ use Drupal\views\ViewExecutable;
 use Drupal\views_xml_backend\Plugin\views\argument\XmlArgumentInterface;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\RequestException;
+use GuzzleHttp\RequestOptions;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -422,23 +423,21 @@ class Xml extends QueryPluginBase {
       throw new \RuntimeException($this->t('Views XML Backend directory either cannot be created or is not writable.'));
     }
 
-    $headers = [];
     $cache_file = 'views_xml_backend_' . hash('sha256', $uri);
     $cache_file_uri = "$destination/$cache_file";
 
+    $options = [];
+    // Add cached headers if requested.
     if ($cache = $this->cacheBackend->get($cache_file)) {
-      $last_headers = $cache->data;
-
-      if (!empty($last_headers['etag'])) {
-        $headers['If-None-Match'] = $last_headers['etag'];
+      if (isset($cache->data['etag'])) {
+        $options[RequestOptions::HEADERS]['If-None-Match'] = $cache->data['etag'];
       }
-      if (!empty($last_headers['last-modified'])) {
-        $headers['If-Modified-Since'] = $last_headers['last-modified'];
+      if (isset($cache->data['last-modified'])) {
+        $options[RequestOptions::HEADERS]['If-Modified-Since'] = $cache->data['last-modified'];
       }
     }
 
-    // @todo Add headers to request.
-    $response = $this->httpClient->get($uri);
+    $response = $this->httpClient->get($uri, $options);
 
     if ($response->getStatusCode() === 304) {
       if (file_exists($cache_file_uri)) {
