@@ -70,15 +70,19 @@ class Numeric extends NumericFilter {
   public function __toString() {
     $operator = $this->operator;
     $xpath = $this->options['xpath_selector'];
-    $value = Xpath::escapeXpathString($this->value);
+
+    $min = Xpath::escapeXpathString($this->value['min']);
+    $max = Xpath::escapeXpathString($this->value['max']);
 
     if ($operator === 'between') {
-      return $xpath . '>=' . $this->value['min'] . ' and ' . $xpath . '<=' . $this->value['max'];
+      return $xpath . '>=' . $min . ' and ' . $xpath . '<=' . $max;
     }
+
     if ($operator === 'not between') {
-      return $xpath . '<=' . $this->value['min'] . ' or ' . $xpath . '>=' . $this->value['max'];
+      return $xpath . '<=' . $min . ' or ' . $xpath . '>=' . $max;
     }
-    return $xpath . $operator . $this->value['value'];
+
+    return $xpath . $operator . Xpath::escapeXpathString($this->value['value']);
   }
 
 }
