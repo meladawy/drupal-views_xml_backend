@@ -28,7 +28,9 @@ trait AdminLabelTrait {
       return $this->options['admin_label'];
     }
 
-    return $this->t('@xpath', ['@xpath' => $this->options['xpath_selector']]);
+    $title = ($short && isset($this->definition['title short'])) ? $this->definition['title short'] : $this->definition['title'];
+
+    return $this->t('@xpath: @title', ['@xpath' => $this->options['xpath_selector'], '@title' => $title]);
   }
 
 }
