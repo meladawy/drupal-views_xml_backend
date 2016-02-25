@@ -58,13 +58,6 @@ class Xml extends QueryPluginBase {
   protected $cacheBackend;
 
   /**
-   * Error messages that result from XML parsing.
-   *
-   * @var array
-   */
-  protected $errorMessages = [];
-
-  /**
    * Extra fields to query. Added from sorters.
    *
    * @var string[]
@@ -84,6 +77,13 @@ class Xml extends QueryPluginBase {
    * @var XmlFilterInterface[]
    */
   protected $filters = [];
+
+  /**
+   * Whether the current view is in preview.
+   *
+   * @var bool
+   */
+  protected $livePreview = FALSE;
 
   /**
    * The logger.
@@ -320,6 +320,7 @@ class Xml extends QueryPluginBase {
 
     $view->build_info['query'] = $this->query();
     $view->build_info['count_query'] = '';
+    $this->livePreview = !empty($view->live_preview);
   }
 
   /**
@@ -328,11 +329,21 @@ class Xml extends QueryPluginBase {
   public function execute(ViewExecutable $view) {
     $start = microtime(TRUE);
 
-    $use_errors = $this->startXmlErrorHandling();
+    libxml_clear_errors();
+    $use_errors = libxml_use_internal_errors(TRUE);
 
     $this->doExecute($view);
 
-    $this->stopXmlErrorHandling($use_errors);
+    if ($this->livePreview && $this->options['show_errors']) {
+      foreach (libxml_get_errors() as $error) {
+        $type = $error->level === LIBXML_ERR_FATAL ? 'error' : 'warning';
+        $args = ['%error' => trim($error->message), '%num' => $error->line, '%code' => $error->code];
+        $this->messenger->setMessage($this->t('%error on line %num. Error code: %code', $args), $type);
+      }
+    }
+
+    libxml_use_internal_errors($use_errors);
+    libxml_clear_errors();
 
     $view->execute_time = microtime(TRUE) - $start;
   }
@@ -389,34 +400,6 @@ class Xml extends QueryPluginBase {
    */
   public function getCacheMaxAge() {
     return 0;
-  }
-
-  /**
-   * Starts custom error handling.
-   */
-  protected function startXmlErrorHandling() {
-    libxml_clear_errors();
-
-    return libxml_use_internal_errors(TRUE);
-  }
-
-  /**
-   * Stops custom error handling.
-   *
-   * @param bool $use_errors
-   *   The previous value of libxml_use_internal_errors().
-   */
-  protected function stopXmlErrorHandling($use_errors) {
-    foreach (libxml_get_errors() as $error) {
-      $this->errorMessages[$error->level][] = [
-        'message' => trim($error->message),
-        'line' => $error->line,
-        'code' => $error->code,
-      ];
-    }
-
-    libxml_use_internal_errors($use_errors);
-    libxml_clear_errors();
   }
 
   /**
@@ -493,7 +476,10 @@ class Xml extends QueryPluginBase {
     // @see http://symfony.com/blog/security-release-symfony-2-0-17-released
     foreach ($document->childNodes as $child) {
       if ($child->nodeType === XML_DOCUMENT_TYPE_NODE) {
-        $this->messenger->setMessage($this->t('A suspicious document was detected.'), 'error');
+
+        if ($this->livePreview) {
+          $this->messenger->setMessage($this->t('A suspicious document was detected.'), 'error');
+        }
         // @todo Add more context. The specific view? A link to the page?
         $this->logger->error('A suspicious document was detected.');
 
@@ -519,7 +505,9 @@ class Xml extends QueryPluginBase {
    */
   protected function fetchFileContents($uri) {
     if ($uri === '') {
-      $this->messenger->setMessage($this->t('Please enter a file path or URL in the query settings.'));
+      if ($this->livePreview) {
+        $this->messenger->setMessage($this->t('Please enter a file path or URL in the query settings.'));
+      }
       return '';
     }
 
@@ -547,7 +535,9 @@ class Xml extends QueryPluginBase {
       return file_get_contents($uri);
     }
 
-    $this->messenger->setMessage($this->t('Local file not found: @uri', ['@uri' => $uri]), 'error');
+    if ($this->livePreview) {
+      $this->messenger->setMessage($this->t('Local file not found: @uri', ['@uri' => $uri]), 'error');
+    }
     $this->logger->error('Local file not found: @uri', ['@uri' => $uri]);
 
     return '';
@@ -566,7 +556,9 @@ class Xml extends QueryPluginBase {
     $destination = Settings::get('views_xml_backend_cache_directory', static::DEFAULT_CACHE_DIR);
 
     if (!file_prepare_directory($destination, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS)) {
-      $this->messenger->setMessage($this->t('File cache directory either cannot be created or is not writable.'), 'error');
+      if ($this->livePreview) {
+        $this->messenger->setMessage($this->t('File cache directory either cannot be created or is not writable.'), 'error');
+      }
       $this->logger->error('File cache directory either cannot be created or is not writable.');
 
       return (string) $this->doGetRequest($uri)->getBody();
@@ -631,7 +623,11 @@ class Xml extends QueryPluginBase {
     catch (\RuntimeException $e) {
       // @todo We can add more granular error messages based on Guzzle exception
       // types. We could also display this error with dsm() if we're in preview.
-      $this->logger->error('An error occured while downloading @url: %message.', ['@url' => $url, '%message' => $e->getMessage()]);
+      $args = ['@url' => $url, '%message' => $e->getMessage()];
+      $this->logger->error('An error occured while downloading @url: %message.', $args);
+      if ($this->livePreview) {
+        $this->messenger->setMessage($this->t('An error occured while downloading @url: %message.', $args), 'error');
+      }
     }
 
     // Fake a response.
