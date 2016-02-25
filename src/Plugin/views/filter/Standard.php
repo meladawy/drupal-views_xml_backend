@@ -48,34 +48,42 @@ class Standard extends StringFilter {
       '=' => [
         'title' => $this->t('Is equal to'),
         'short' => $this->t('='),
+        'values' => 1,
       ],
       '!=' => [
         'title' => $this->t('Is not equal to'),
         'short' => $this->t('!='),
+        'values' => 1,
       ],
       'contains' => [
         'title' => $this->t('Contains'),
         'short' => $this->t('contains'),
+        'values' => 1,
       ],
       '!contains' => [
         'title' => $this->t('Does not contain'),
         'short' => $this->t('not_contains'),
+        'values' => 1,
       ],
       'starts-with' => [
         'title' => $this->t('Starts with'),
         'short' => $this->t('begins'),
+        'values' => 1,
       ],
       '!starts-with' => [
         'title' => $this->t('Does not start with'),
         'short' => $this->t('not_begins'),
+        'values' => 1,
       ],
       'ends-with' => [
         'title' => $this->t('Ends with'),
         'short' => $this->t('ends'),
+        'values' => 1,
       ],
       '!ends-with' => [
         'title' => $this->t('Does not end with'),
         'short' => $this->t('not_ends'),
+        'values' => 1,
       ],
     ];
 
