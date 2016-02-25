@@ -9,6 +9,7 @@ namespace Drupal\views_xml_backend\Plugin\views\argument;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\views\Plugin\views\argument\ArgumentPluginBase;
+use Drupal\views_xml_backend\AdminLabelTrait;
 use Drupal\views_xml_backend\Xpath;
 
 /**
@@ -19,6 +20,8 @@ use Drupal\views_xml_backend\Xpath;
  * @ViewsArgument("views_xml_backend_standard")
  */
 class Standard extends ArgumentPluginBase implements XmlArgumentInterface {
+
+  use AdminLabelTrait;
 
   /**
    * {@inheritdoc}

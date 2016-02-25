@@ -11,6 +11,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\views\Plugin\views\field\FieldPluginBase;
 use Drupal\views\Plugin\views\field\MultiItemsFieldHandlerInterface;
 use Drupal\views\ResultRow;
+use Drupal\views_xml_backend\AdminLabelTrait;
 use Drupal\views_xml_backend\Sorter\StringSorter;
 
 /**
@@ -23,6 +24,7 @@ use Drupal\views_xml_backend\Sorter\StringSorter;
 class Standard extends FieldPluginBase implements MultiItemsFieldHandlerInterface {
 
   use XmlFieldHelperTrait;
+  use AdminLabelTrait;
 
   /**
    * {@inheritdoc}

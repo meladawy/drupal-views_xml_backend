@@ -11,7 +11,8 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\views\Plugin\views\field\Date as ViewsDate;
 use Drupal\views\Plugin\views\field\MultiItemsFieldHandlerInterface;
 use Drupal\views\ResultRow;
-use Drupal\views_xml_backend\Sorter\StringSorter;
+use Drupal\views_xml_backend\AdminLabelTrait;
+use Drupal\views_xml_backend\Sorter\DateSorter;
 
 /**
  * A handler to provide an XML date field.
@@ -23,6 +24,7 @@ use Drupal\views_xml_backend\Sorter\StringSorter;
 class Date extends ViewsDate implements MultiItemsFieldHandlerInterface {
 
   use XmlFieldHelperTrait;
+  use AdminLabelTrait;
 
   /**
    * {@inheritdoc}

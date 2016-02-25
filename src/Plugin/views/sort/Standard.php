@@ -9,6 +9,7 @@ namespace Drupal\views_xml_backend\Plugin\views\sort;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\views\Plugin\views\sort\SortPluginBase;
+use Drupal\views_xml_backend\AdminLabelTrait;
 use Drupal\views_xml_backend\Sorter\StringSorter;
 
 /**
@@ -19,6 +20,8 @@ use Drupal\views_xml_backend\Sorter\StringSorter;
  * @ViewsSort("views_xml_backend_standard")
  */
 class Standard extends SortPluginBase {
+
+  use AdminLabelTrait;
 
   /**
    * {@inheritdoc}
