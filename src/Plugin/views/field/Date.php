@@ -9,6 +9,7 @@ namespace Drupal\views_xml_backend\Plugin\views\field;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\views\Plugin\views\field\Date as ViewsDate;
+use Drupal\views\Plugin\views\field\MultiItemsFieldHandlerInterface;
 use Drupal\views\ResultRow;
 use Drupal\views_xml_backend\Sorter\StringSorter;
 
@@ -19,7 +20,7 @@ use Drupal\views_xml_backend\Sorter\StringSorter;
  *
  * @ViewsField("views_xml_backend_date")
  */
-class Date extends ViewsDate {
+class Date extends ViewsDate implements MultiItemsFieldHandlerInterface {
 
   use XmlFieldHelperTrait;
 
@@ -42,23 +43,24 @@ class Date extends ViewsDate {
   /**
    * {@inheritdoc}
    */
-  public function render(ResultRow $row) {
-    $output_values = [];
+  public function render_item($count, $item) {
     $tmp_row = new ResultRow();
 
-    foreach ($this->getValue($row) as $value) {
-      $tmp_row->{$this->field_alias} = $value;
-      $output_values[] = parent::render($tmp_row);
+    if (!is_numeric($item['value'])) {
+      $tmp_row->{$this->field_alias} = strtotime($item['value']);
+    }
+    else {
+      $tmp_row->{$this->field_alias} = $item['value'];
     }
 
-    return $this->renderXmlRow($output_values);
+    return parent::render($tmp_row);
   }
 
   /**
    * {@inheritdoc}
    */
   public function clickSort($order) {
-    $this->query->addSort(new StringSorter($this->realField, $order));
+    $this->query->addSort(new DateSorter($this->field_alias, $order));
   }
 
 }

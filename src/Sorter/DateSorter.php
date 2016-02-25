@@ -50,7 +50,7 @@ class DateSorter extends StringSorter {
    * @return int
    *   The unix timestamp of the date.
    */
-  protected function covertToUnixTimestamp($date) {
+  protected function convertToUnixTimestamp($date) {
     if (is_numeric($date)) {
       return (int) $date;
     }

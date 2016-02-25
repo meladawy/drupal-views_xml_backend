@@ -44,8 +44,8 @@ function views_xml_backend_views_data() {
   ];
 
   $data['views_xml_backend']['markup'] = [
-    'title' => t('XML Markup Text'),
-    'help' => t('Markup text in the XML file.'),
+    'title' => t('HTML Markup'),
+    'help' => t('HTML text in the XML file.'),
     'field' => ['id' => 'views_xml_backend_markup'],
   ];
 

@@ -37,9 +37,8 @@ trait XmlFieldHelperTrait {
     $options = [];
 
     $options['xpath_selector']['default'] = '';
-    $options['multiple']['default'] = FALSE;
-    $options['list_type']['default'] = 'ul';
-    $options['custom_separator']['default'] = ', ';
+    $options['type']['default'] = 'separator';
+    $options['separator']['default'] = ', ';
 
     return $options;
   }
@@ -56,41 +55,24 @@ trait XmlFieldHelperTrait {
       '#required' => TRUE,
     ];
 
-    $form['multiple'] = [
-      '#title' => $this->t('Allow multiple'),
-      '#description' => $this->t('Treat this field as multi-valued.'),
-      '#type' => 'checkbox',
-      '#default_value' => $this->options['multiple'],
-    ];
-
-    $form['list_type'] = [
-      '#title' => $this->t('List type'),
-      '#description' => $this->t('The type of list.'),
+    $form['type'] = [
       '#type' => 'radios',
-      '#default_value' => $this->options['list_type'],
+      '#title' => $this->t('Display type'),
       '#options' => [
         'ul' => $this->t('Unordered list'),
         'ol' => $this->t('Ordered list'),
-        'br' => $this->t('HTML break'),
-        'other' => $this->t('Custom separator'),
+        'separator' => $this->t('Simple separator'),
       ],
-      '#states' => [
-        'visible' => [
-          ':input[name="options[multiple]"]' => [
-            'checked' => TRUE,
-          ],
-        ],
-      ],
+      '#default_value' => $this->options['type'],
     ];
 
-    $form['custom_separator'] = [
+    $form['separator'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Separator'),
-      '#default_value' => $this->options['custom_separator'],
+      '#default_value' => $this->options['separator'],
       '#states' => [
         'visible' => [
-          ':input[name="options[list_type]"]' => ['value' => 'other'],
-          ':input[name="options[multiple]"]' => ['checked' => TRUE],
+          ':input[name="options[type]"]' => ['value' => 'separator'],
         ],
       ],
     ];
@@ -101,24 +83,43 @@ trait XmlFieldHelperTrait {
   /**
    * {@inheritdoc}
    */
-  protected function renderXmlRow(array $values) {
-    if (empty($this->options['multiple'])) {
-      return $this->sanitizeValue(reset($values));
+  public function renderItems($items) {
+    if (!empty($items)) {
+      if ($this->options['type'] == 'separator') {
+        $render = [
+          '#type' => 'inline_template',
+          '#template' => '{{ items|safe_join(separator) }}',
+          '#context' => [
+            'items' => $items,
+            'separator' => $this->sanitizeValue($this->options['separator'], 'xss_admin')
+          ]
+        ];
+      }
+      else {
+        $render = array(
+          '#theme' => 'item_list',
+          '#items' => $items,
+          '#title' => NULL,
+          '#list_type' => $this->options['type'],
+        );
+      }
+      return drupal_render($render);
+    }
+  }
+
+  public function getItems(ResultRow $row) {
+    $return = [];
+    if ($values = $this->getValue($row)) {
+      foreach ($values as $value) {
+        $return[] = ['value' => $value];
+      }
     }
 
-    if ($this->options['list_type'] === 'other') {
-      return $this->sanitizeValue(implode(SafeMarkup::checkPlain($this->options['custom_separator']), $values));
-    }
+    return $return;
+  }
 
-    if ($this->options['list_type'] === 'br') {
-      return $this->sanitizeValue(implode('<br>', $values));
-    }
-
-    return [
-      '#theme' => 'item_list',
-      '#items' => $values,
-      '#list_type' => $this->options['list_type'],
-    ];
+  public function render_item($count, $item) {
+    return $item['value'];
   }
 
 }

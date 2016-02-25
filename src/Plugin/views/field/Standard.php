@@ -9,6 +9,7 @@ namespace Drupal\views_xml_backend\Plugin\views\field;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\views\Plugin\views\field\FieldPluginBase;
+use Drupal\views\Plugin\views\field\MultiItemsFieldHandlerInterface;
 use Drupal\views\ResultRow;
 use Drupal\views_xml_backend\Sorter\StringSorter;
 
@@ -19,7 +20,7 @@ use Drupal\views_xml_backend\Sorter\StringSorter;
  *
  * @ViewsField("views_xml_backend_standard")
  */
-class Standard extends FieldPluginBase {
+class Standard extends FieldPluginBase implements MultiItemsFieldHandlerInterface {
 
   use XmlFieldHelperTrait;
 
@@ -42,15 +43,8 @@ class Standard extends FieldPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function render(ResultRow $row) {
-    return $this->renderXmlRow($this->getValue($row));
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function clickSort($order) {
-    $this->query->addSort(new StringSorter($this->realField, $order));
+    $this->query->addSort(new StringSorter($this->field_alias, $order));
   }
 
 }

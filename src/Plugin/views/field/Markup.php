@@ -9,8 +9,6 @@ namespace Drupal\views_xml_backend\Plugin\views\field;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountProxyInterface;
-use Drupal\views\ResultRow;
-use Drupal\views_xml_backend\Sorter\StringSorter;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -55,7 +53,7 @@ class Markup extends Standard {
       $configuration,
       $plugin_id,
       $plugin_definition,
-      $container->get('current_user'),
+      $container->get('current_user')
     );
   }
 
@@ -64,7 +62,7 @@ class Markup extends Standard {
    */
   protected function defineOptions() {
     $options = parent::defineOptions();
-    $options['format'] = ['default' => ''];
+    $options['format']['default'] = '';
 
     return $options;
   }
@@ -92,30 +90,10 @@ class Markup extends Standard {
   /**
    * {@inheritdoc}
    */
-  public function render(ResultRow $row) {
-    $output_values = [];
+  public function render_item($count, $item) {
+    $value = str_replace('<!--break-->', '', $item['value']);
 
-    foreach ($this->getValue($row) as $value) {
-      $value = str_replace('<!--break-->', '', $value);
-
-      $output_values[] = check_markup($value, $this->options['format']);
-    }
-
-    return $this->renderXmlRow($output_values);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function sanitizeValue($value, $type = NULL) {
-    return $value;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function clickSort($order) {
-    $this->query->addSort(new StringSorter($this->realField, $order));
+    return check_markup($value, $this->options['format']);
   }
 
 }
