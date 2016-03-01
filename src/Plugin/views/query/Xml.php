@@ -44,6 +44,13 @@ class Xml extends QueryPluginBase {
   const DEFAULT_CACHE_DIR = 'public://views_xml_backend';
 
   /**
+   * A simple array of order by clauses.
+   *
+   * @var array
+   */
+  public $orderby = [];
+
+  /**
    * A list of added arguments.
    *
    * @var \Drupal\views_xml_backend\Plugin\views\argument\XmlArgumentInterface[]
@@ -98,13 +105,6 @@ class Xml extends QueryPluginBase {
    * @var \Drupal\views_xml_backend\MessengerInterface
    */
   protected $messenger;
-
-  /**
-   * The applied sorts.
-   *
-   * @var callable[]
-   */
-  protected $sorts = [];
 
   /**
    * Constructs an Xml object.
@@ -275,7 +275,7 @@ class Xml extends QueryPluginBase {
    */
   public function addOrderBy($table, $field = NULL, $order = 'ASC', $alias = '', $params = []) {
     if ($table === 'rand') {
-      $this->sorts[] = 'shuffle';
+      $this->orderby[] = 'shuffle';
     }
   }
 
@@ -288,7 +288,7 @@ class Xml extends QueryPluginBase {
    * @see \Drupal\views_xml_backend\Sorter\SorterInterface.
    */
   public function addSort($callback) {
-    $this->sorts[] = $callback;
+    $this->orderby[] = $callback;
   }
 
   /**
@@ -380,7 +380,7 @@ class Xml extends QueryPluginBase {
       }
     }
 
-    if (!empty($this->sorts)) {
+    if (!empty($this->orderby)) {
       $this->executeSorts($view);
     }
 
@@ -703,7 +703,7 @@ class Xml extends QueryPluginBase {
    *   The view to sort.
    */
   protected function executeSorts(ViewExecutable $view) {
-    foreach (array_reverse($this->sorts) as $sort) {
+    foreach (array_reverse($this->orderby) as $sort) {
       $sort($view->result);
     }
 

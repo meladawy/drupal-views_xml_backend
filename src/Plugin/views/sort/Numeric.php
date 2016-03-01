@@ -22,7 +22,7 @@ class Numeric extends Standard {
    * {@inheritdoc}
    */
   public function query() {
-    $alias = 'sort_numeric_' . $this->realField;
+    $alias = 'sort_numeric_' . $this->options['id'];
     $this->query->addField($alias, $this->options['xpath_selector']);
     $this->query->addSort(new NumericSorter($alias, $this->options['order']));
   }

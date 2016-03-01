@@ -22,7 +22,7 @@ class Date extends Standard {
    * {@inheritdoc}
    */
   public function query() {
-    $alias = 'sort_date_' . $this->realField;
+    $alias = 'sort_date_' . $this->options['id'];
     $this->query->addField($alias, $this->options['xpath_selector']);
     $this->query->addSort(new DateSorter($alias, $this->options['order']));
   }
