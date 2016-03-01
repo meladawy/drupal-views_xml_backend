@@ -366,9 +366,8 @@ class Xml extends QueryPluginBase {
       $view->pager->total_items -= $view->pager->getOffset();
     }
 
-    foreach ($xpath->query($view->build_info['query']) as $index => $row) {
+    foreach ($xpath->query($view->build_info['query']) as $row) {
       $result_row = new ResultRow();
-      $result_row->index = $index;
       $view->result[] = $result_row;
 
       foreach ($view->field as $field_name => $field) {
@@ -380,14 +379,18 @@ class Xml extends QueryPluginBase {
       }
     }
 
-    if (!empty($this->orderby)) {
-      $this->executeSorts($view);
-    }
+    $this->executeSorts($view);
 
     if (!empty($this->limit) || !empty($this->offset)) {
       // @todo Re-implement the performance optimization. For the case with no
       // sorts, we can avoid parsing the whole file.
       $view->result = array_slice($view->result, (int) $this->offset, (int) $this->limit);
+    }
+
+    // Set the index values after all manipulation is done.
+    $index = 0;
+    foreach ($view->result as $row) {
+      $row->index = $index++;
     }
 
     $view->pager->postExecute($view->result);
@@ -705,12 +708,6 @@ class Xml extends QueryPluginBase {
   protected function executeSorts(ViewExecutable $view) {
     foreach (array_reverse($this->orderby) as $sort) {
       $sort($view->result);
-    }
-
-    // Re-number the indexes.
-    $index = 0;
-    foreach ($view->result as $row) {
-      $row->index = $index++;
     }
   }
 
