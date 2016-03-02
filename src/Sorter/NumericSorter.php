@@ -19,7 +19,6 @@ class NumericSorter extends StringSorter {
    */
   public function __invoke(array &$result) {
     // Notice the order of the subtraction.
-
     switch ($this->direction) {
       case 'ASC':
         uasort($result, function (ResultRow $a, ResultRow $b) {

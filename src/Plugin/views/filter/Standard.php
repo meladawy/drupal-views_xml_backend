@@ -19,7 +19,7 @@ use Drupal\views_xml_backend\Xpath;
  *
  * @ViewsFilter("views_xml_backend_standard")
  */
-class Standard extends StringFilter {
+class Standard extends StringFilter implements XmlFilterInterface {
 
   use AdminLabelTrait;
 

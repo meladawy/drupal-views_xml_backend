@@ -8,8 +8,7 @@
 namespace Drupal\views_xml_backend\Plugin\views\argument;
 
 /**
- * Argument plugins that are compatible with views_xml_backend must implement
- * this interface.
+ * Argument plugins that are compatible with views_xml_backend.
  */
 interface XmlArgumentInterface {
 

@@ -19,7 +19,7 @@ use Drupal\views_xml_backend\Xpath;
  *
  * @ViewsFilter("views_xml_backend_numeric")
  */
-class Numeric extends NumericFilter {
+class Numeric extends NumericFilter implements XmlFilterInterface {
 
   use AdminLabelTrait;
 

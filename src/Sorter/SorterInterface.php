@@ -21,4 +21,5 @@ interface SorterInterface {
    *   The views result.
    */
   public function __invoke(array &$result);
+
 }

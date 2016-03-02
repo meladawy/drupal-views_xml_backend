@@ -46,7 +46,6 @@ class StringSorter implements SorterInterface {
    */
   public function __invoke(array &$result) {
     // Notice the order of the arguments to strcasecmp().
-
     switch ($this->direction) {
       case 'ASC':
         uasort($result, function (ResultRow $a, ResultRow $b) {

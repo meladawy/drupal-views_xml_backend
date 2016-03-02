@@ -17,6 +17,7 @@ use Drupal\views\ViewExecutable;
 use Drupal\views_xml_backend\Messenger;
 use Drupal\views_xml_backend\MessengerInterface;
 use Drupal\views_xml_backend\Plugin\views\argument\XmlArgumentInterface;
+use Drupal\views_xml_backend\Plugin\views\filter\XmlFilterInterface;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\RequestOptions;
@@ -72,7 +73,7 @@ class Xml extends QueryPluginBase {
   protected $extraFields = [];
 
   /**
-   * The HTTP client
+   * The HTTP client.
    *
    * @var \GuzzleHttp\ClientInterface
    */
@@ -119,7 +120,7 @@ class Xml extends QueryPluginBase {
    *   The HTTP client.
    * @param \Drupal\Core\Cache\CacheBackendInterface $cache_backend
    *   The cache backend.
-   * @param \Psr\Log\LoggerInterface
+   * @param \Psr\Log\LoggerInterface $logger
    *   The logger.
    * @param \Drupal\views_xml_backend\MessengerInterface $messenger
    *   The messenger used to display messages to the user.
@@ -202,9 +203,11 @@ class Xml extends QueryPluginBase {
   }
 
   /**
-   * Ensure a table exists in the queue; if it already exists it won't
-   * do anything, but if it doesn't it will add the table queue. It will ensure
-   * a path leads back to the relationship table.
+   * Ensures a table exists in the queue.
+   *
+   * If it already exists it won't do anything, but if it doesn't it will add
+   * the table queue. It will ensure a path leads back to the relationship
+   * table.
    *
    * @param string $table
    *   The unaliased name of the table to ensure.
@@ -249,10 +252,10 @@ class Xml extends QueryPluginBase {
   /**
    * Adds a filter.
    *
-   * @param XmlFilterInterface $filter
+   * @param \Drupal\views_xml_backend\Plugin\views\filter\XmlFilterInterface $filter
    *   The filter to add.
    */
-  public function addFilter($filter) {
+  public function addFilter(XmlFilterInterface $filter) {
     $this->filters[] = $filter;
   }
 
@@ -289,9 +292,9 @@ class Xml extends QueryPluginBase {
    * @param callable $callback
    *   A callable that can sort a views result.
    *
-   * @see \Drupal\views_xml_backend\Sorter\SorterInterface.
+   * @see \Drupal\views_xml_backend\Sorter\SorterInterface
    */
-  public function addSort($callback) {
+  public function addSort(callable $callback) {
     $this->orderby[] = $callback;
   }
 
@@ -303,11 +306,11 @@ class Xml extends QueryPluginBase {
 
     if ($this->filters) {
       // @todo Add an option for the filters to be 'and' or 'or'.
-      $row_xpath .=  '[' . implode(' and ', $this->filters) . ']';
+      $row_xpath .= '[' . implode(' and ', $this->filters) . ']';
     }
 
     if ($this->arguments) {
-      $row_xpath .=  '[' . implode(' and ', $this->arguments) . ']';
+      $row_xpath .= '[' . implode(' and ', $this->arguments) . ']';
     }
 
     return $row_xpath;
@@ -347,7 +350,11 @@ class Xml extends QueryPluginBase {
     if ($this->livePreview && $this->options['show_errors']) {
       foreach (libxml_get_errors() as $error) {
         $type = $error->level === LIBXML_ERR_FATAL ? 'error' : 'warning';
-        $args = ['%error' => trim($error->message), '%num' => $error->line, '%code' => $error->code];
+        $args = [
+          '%error' => trim($error->message),
+          '%num' => $error->line,
+          '%code' => $error->code,
+        ];
         $this->messenger->setMessage($this->t('%error on line %num. Error code: %code', $args), $type);
       }
     }

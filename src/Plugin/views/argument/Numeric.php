@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\views_xml_backend\Plugin\views\argument\Numeric,
+ * Contains \Drupal\views_xml_backend\Plugin\views\argument\Numeric.
  */
 
 namespace Drupal\views_xml_backend\Plugin\views\argument;

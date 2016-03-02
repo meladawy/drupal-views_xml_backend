@@ -9,7 +9,6 @@ namespace Drupal\views_xml_backend\Plugin\views\field;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\views\ResultRow;
-use Drupal\Component\Utility\SafeMarkup;
 
 /**
  * A handler to provide an XML text field.
@@ -17,7 +16,9 @@ use Drupal\Component\Utility\SafeMarkup;
 trait XmlFieldHelperTrait {
 
   /**
-   * {@inheritdoc}
+   * Provides the handler some groupby.
+   *
+   * @see \Drupal\views\Plugin\views\HandlerBase
    */
   public function usesGroupBy() {
     return FALSE;
@@ -31,7 +32,10 @@ trait XmlFieldHelperTrait {
   }
 
   /**
-   * {@inheritdoc}
+   * Returns the default options for XML fields.
+   *
+   * @return array
+   *   The default options array.
    */
   protected function getDefaultXmlOptions() {
     $options = [];
@@ -44,7 +48,15 @@ trait XmlFieldHelperTrait {
   }
 
   /**
-   * {@inheritdoc}
+   * Returns the default options form for XML fields.
+   *
+   * @param array $form
+   *   The form.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
+   *
+   * @return array
+   *   The updated form array.
    */
   public function getDefaultXmlOptionsForm(array $form, FormStateInterface $form_state) {
     $form['xpath_selector'] = [
@@ -81,7 +93,15 @@ trait XmlFieldHelperTrait {
   }
 
   /**
-   * {@inheritdoc}
+   * Render all items in this field together.
+   *
+   * @param array $items
+   *   The items provided by getItems for a single row.
+   *
+   * @return string
+   *   The rendered items.
+   *
+   * @see \Drupal\views\Plugin\views\field\MultiItemsFieldHandlerInterface
    */
   public function renderItems($items) {
     if (!empty($items)) {
@@ -91,8 +111,8 @@ trait XmlFieldHelperTrait {
           '#template' => '{{ items|safe_join(separator) }}',
           '#context' => [
             'items' => $items,
-            'separator' => $this->sanitizeValue($this->options['separator'], 'xss_admin')
-          ]
+            'separator' => $this->sanitizeValue($this->options['separator'], 'xss_admin'),
+          ],
         ];
       }
       else {
@@ -107,6 +127,17 @@ trait XmlFieldHelperTrait {
     }
   }
 
+  /**
+   * Gets an array of items for the field.
+   *
+   * @param \Drupal\views\ResultRow $row
+   *   The result row object containing the values.
+   *
+   * @return array
+   *   An array of items for the field.
+   *
+   * @see \Drupal\views\Plugin\views\field\MultiItemsFieldHandlerInterface
+   */
   public function getItems(ResultRow $row) {
     $return = [];
     if ($values = $this->getValue($row)) {
@@ -118,6 +149,19 @@ trait XmlFieldHelperTrait {
     return $return;
   }
 
+  /**
+   * Renders a single item of a row.
+   *
+   * @param int $count
+   *   The index of the item inside the row.
+   * @param mixed $item
+   *   The item for the field to render.
+   *
+   * @return string
+   *   The rendered output.
+   *
+   * @see \Drupal\views\Plugin\views\field\MultiItemsFieldHandlerInterface
+   */
   public function render_item($count, $item) {
     return $item['value'];
   }
