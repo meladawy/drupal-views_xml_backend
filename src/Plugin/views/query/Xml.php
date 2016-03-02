@@ -121,6 +121,8 @@ class Xml extends QueryPluginBase {
    *   The cache backend.
    * @param \Psr\Log\LoggerInterface
    *   The logger.
+   * @param \Drupal\views_xml_backend\MessengerInterface $messenger
+   *   The messenger used to display messages to the user.
    */
   public function __construct(array $configuration, $plugin_id, $plugin_definition, ClientInterface $http_client, CacheBackendInterface $cache_backend, LoggerInterface $logger, MessengerInterface $messenger) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
@@ -172,6 +174,7 @@ class Xml extends QueryPluginBase {
       '#default_value' => $this->options['xml_file'],
       '#description' => $this->t('The URL or path to the XML file.'),
       '#maxlength' => 1024,
+      '#required' => TRUE,
     ];
 
     $form['row_xpath'] = [
@@ -179,6 +182,7 @@ class Xml extends QueryPluginBase {
       '#title' => $this->t('Row Xpath'),
       '#default_value' => $this->options['row_xpath'],
       '#description' => $this->t('An xpath function that selects rows.'),
+      '#maxlength' => 1024,
       '#required' => TRUE,
     ];
 
@@ -327,6 +331,12 @@ class Xml extends QueryPluginBase {
    * {@inheritdoc}
    */
   public function execute(ViewExecutable $view) {
+    // When creating a new view, there won't be a query set yet.
+    if (!strlen($view->build_info['query'])) {
+      $this->messenger->setMessage($this->t('Please configure the query settings.'), 'warning');
+      return;
+    }
+
     $start = microtime(TRUE);
 
     libxml_clear_errors();
