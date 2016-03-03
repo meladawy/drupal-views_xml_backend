@@ -78,14 +78,14 @@ class Numeric extends NumericFilter implements XmlFilterInterface {
     $max = Xpath::escapeXpathString($this->value['max']);
 
     if ($operator === 'between') {
-      return $xpath . '>=' . $min . ' and ' . $xpath . '<=' . $max;
+      return $xpath . ' >= ' . $min . ' and ' . $xpath . ' <= ' . $max;
     }
 
     if ($operator === 'not between') {
-      return $xpath . '<=' . $min . ' or ' . $xpath . '>=' . $max;
+      return $xpath . ' <= ' . $min . ' or ' . $xpath . ' >= ' . $max;
     }
 
-    return $xpath . $operator . Xpath::escapeXpathString($this->value['value']);
+    return $xpath . ' ' . $operator . ' ' . Xpath::escapeXpathString($this->value['value']);
   }
 
 }

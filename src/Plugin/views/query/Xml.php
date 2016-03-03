@@ -335,7 +335,7 @@ class Xml extends QueryPluginBase {
    */
   public function execute(ViewExecutable $view) {
     // When creating a new view, there won't be a query set yet.
-    if (!strlen($view->build_info['query'])) {
+    if ($view->build_info['query'] === '') {
       $this->messenger->setMessage($this->t('Please configure the query settings.'), 'warning');
       return;
     }

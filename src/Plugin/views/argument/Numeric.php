@@ -20,6 +20,9 @@ class Numeric extends Standard {
    * {@inheritdoc}
    */
   public function __toString() {
+    // @todo This class should extend
+    // \Drupal\views\Plugin\views\argument\NumericArgument to provide not()
+    // options.
     return $this->options['xpath_selector'] . '=' . $this->getValue();
   }
 

@@ -91,9 +91,15 @@ class Markup extends Standard {
    * {@inheritdoc}
    */
   public function render_item($count, $item) {
-    $value = str_replace('<!--break-->', '', $item['value']);
+    $text = str_replace('<!--break-->', '', $item['value']);
 
-    return check_markup($value, $this->options['format']);
+    return [
+      '#type' => 'processed_text',
+      '#text' => $text,
+      '#format' => $this->options['format'],
+      '#filter_types_to_skip' => [],
+      '#langcode' => '',
+    ];
   }
 
 }

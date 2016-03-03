@@ -23,7 +23,7 @@ class TestMessenger implements MessengerInterface {
    * {@inheritdoc}
    */
   public function setMessage($message = NULL, $type = 'status', $repeat = FALSE) {
-    $this->messages[$type][] = $message;
+    $this->messages[$type][] = (string) $message;
   }
 
   /**
