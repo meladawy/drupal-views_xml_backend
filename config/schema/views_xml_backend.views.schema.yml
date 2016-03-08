@@ -39,12 +39,24 @@ views.filter.views_xml_backend_standard:
       label: 'The XPath selector'
 
 views.filter.views_xml_backend_numeric:
-  type: views.filter_value.numeric
+  type: views.filter.string
   label: 'Views XML Backend numeric filter'
   mapping:
     xpath_selector:
       type: string
       label: 'The XPath selector'
+    value:
+      type: views.filter_value.numeric
+
+views.filter.views_xml_backend_date:
+  type: views.filter.string
+  label: 'Views XML Backend date filter'
+  mapping:
+    xpath_selector:
+      type: string
+      label: 'The XPath selector'
+    value:
+      type: views.filter_value.numeric
 
 views.argument.views_xml_backend_standard:
   type: views_argument
