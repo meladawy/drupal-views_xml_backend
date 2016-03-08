@@ -54,6 +54,14 @@ views.argument.views_xml_backend_standard:
       type: string
       label: 'The XPath selector'
 
+views.argument.views_xml_backend_date:
+  type: views.argument.date
+  label: 'Views XML Backend text numeric'
+  mapping:
+    xpath_selector:
+      type: string
+      label: 'The XPath selector'
+
 views.argument.views_xml_backend_numeric:
   type: views.argument.views_xml_backend_standard
   label: 'Views XML Backend text numeric'

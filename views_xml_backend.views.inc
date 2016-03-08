@@ -40,6 +40,8 @@ function views_xml_backend_views_data() {
     'title' => t('XML Date'),
     'help' => t('Date in the XML file.'),
     'field' => ['id' => 'views_xml_backend_date'],
+    'argument' => ['id' => 'views_xml_backend_date'],
+    'filter' => ['id' => 'views_xml_backend_date'],
     'sort' => ['id' => 'views_xml_backend_date'],
   ];
 

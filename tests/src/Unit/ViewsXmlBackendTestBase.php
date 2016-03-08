@@ -28,6 +28,8 @@ class ViewsXmlBackendTestBase extends UnitTestCase {
     if (!defined('REQUEST_TIME')) {
       define('REQUEST_TIME', time());
     }
+
+    require_once dirname(dirname(dirname(__DIR__))) . '/views_xml_backend.module';
   }
 
   protected function getMockedView() {

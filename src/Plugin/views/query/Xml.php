@@ -455,6 +455,8 @@ class Xml extends QueryPluginBase {
 
     $this->registerNamespaces($xpath);
 
+    $xpath->registerPhpFunctions('views_xml_backend_date');
+
     return $xpath;
   }
 
@@ -661,6 +663,8 @@ class Xml extends QueryPluginBase {
    *   The XPath object.
    */
   protected function registerNamespaces(\DOMXPath $xpath) {
+    $xpath->registerNamespace('php', 'http://php.net/xpath');
+
     if (!$simple = @simplexml_import_dom($xpath->document)) {
       return;
     }
