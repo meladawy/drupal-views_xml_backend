@@ -1,12 +1,15 @@
 # Schema for the views plugins of the Views XML Backend module.
 
+views_xml_backend.xpath_selector:
+  type: string
+  label: 'XPath selector'
+
 views.field.views_xml_backend_standard:
   type: views.field.prerender_list
   label: 'Views XML Backend text field'
   mapping:
     xpath_selector:
-      type: string
-      label: 'The XPath selector'
+      type: views_xml_backend.xpath_selector
 
 views.field.views_xml_backend_markup:
   type: views.field.views_xml_backend_standard
@@ -35,16 +38,14 @@ views.filter.views_xml_backend_standard:
   label: 'Views XML Backend text filter'
   mapping:
     xpath_selector:
-      type: string
-      label: 'The XPath selector'
+      type: views_xml_backend.xpath_selector
 
 views.filter.views_xml_backend_numeric:
   type: views.filter.string
   label: 'Views XML Backend numeric filter'
   mapping:
     xpath_selector:
-      type: string
-      label: 'The XPath selector'
+      type: views_xml_backend.xpath_selector
     value:
       type: views.filter_value.numeric
 
@@ -53,8 +54,7 @@ views.filter.views_xml_backend_date:
   label: 'Views XML Backend date filter'
   mapping:
     xpath_selector:
-      type: string
-      label: 'The XPath selector'
+      type: views_xml_backend.xpath_selector
     value:
       type: views.filter_value.numeric
 
@@ -63,16 +63,17 @@ views.argument.views_xml_backend_standard:
   label: 'Views XML Backend text argument'
   mapping:
     xpath_selector:
-      type: string
-      label: 'The XPath selector'
+      type: views_xml_backend.xpath_selector
 
 views.argument.views_xml_backend_date:
   type: views.argument.date
   label: 'Views XML Backend text numeric'
   mapping:
     xpath_selector:
+      type: views_xml_backend.xpath_selector
+    granularity:
       type: string
-      label: 'The XPath selector'
+      label: 'Granularity'
 
 views.argument.views_xml_backend_numeric:
   type: views.argument.views_xml_backend_standard
@@ -87,8 +88,7 @@ views.sort.views_xml_backend_standard:
   label: 'Views XML Backend standard sort'
   mapping:
     xpath_selector:
-      type: string
-      label: 'The XPath selector'
+      type: views_xml_backend.xpath_selector
 
 views.sort.views_xml_backend_numeric:
   type: views.sort.views_xml_backend_standard
