@@ -16,7 +16,7 @@ use Drupal\views\ViewExecutable;
 /**
  * Base testing class.
  */
-class ViewsXmlBackendTestBase extends UnitTestCase {
+abstract class ViewsXmlBackendTestBase extends UnitTestCase {
 
   protected $display;
 
