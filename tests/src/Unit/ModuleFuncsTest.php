@@ -8,7 +8,9 @@
 namespace Drupal\Tests\views_xml_backend\Unit;
 
 /**
- * Base testing class.
+ * Module function tests.
+ *
+ * @group views_xml_backend
  */
 class ModuleFuncsTest extends ViewsXmlBackendTestBase {
 
