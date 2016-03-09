@@ -27,7 +27,7 @@ class NumericTest extends ViewsXmlBackendTestBase {
     $plugin->init($this->getMockedView(), $this->getMockedDisplay(), $options);
     $plugin->argument = 4;
 
-    $this->assertSame('xpath_query=4', (string) $plugin);
+    $this->assertSame("xpath_query = '4'", (string) $plugin);
   }
 
 }
