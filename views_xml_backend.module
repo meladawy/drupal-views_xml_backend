@@ -95,3 +95,27 @@ function views_xml_backend_date($date, $granularity = 'second') {
 
   return (int) mktime($parts['hours'], $parts['minutes'], $parts['seconds'], $parts['mon'], $parts['mday'], $parts['year']);
 }
+
+/**
+ * Returns a formatted date value.
+ *
+ * @param string $date
+ *   The date to convert.
+ * @param string $format
+ *   The format to return.
+ *
+ * @return string
+ *   The formatted date value.
+ */
+function views_xml_backend_format_value($date, $format) {
+  $date = trim($date);
+
+  // strtotime() does not handle year values.
+  if (strlen($date) === 4 && (string) (int) $date === $date) {
+    $date = 'January 1, ' . $date;
+  }
+
+  $timestamp = is_numeric($date) ? $date : strtotime($date);
+
+  return date($format, $timestamp);
+}

@@ -71,9 +71,6 @@ views.argument.views_xml_backend_date:
   mapping:
     xpath_selector:
       type: views_xml_backend.xpath_selector
-    granularity:
-      type: string
-      label: 'Granularity'
 
 views.argument.views_xml_backend_numeric:
   type: views.argument.views_xml_backend_standard

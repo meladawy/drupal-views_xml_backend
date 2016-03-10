@@ -45,6 +45,24 @@ function views_xml_backend_views_data() {
     'sort' => ['id' => 'views_xml_backend_date'],
   ];
 
+  $data['views_xml_backend']['date_year'] = [
+    'title' => t('XML Year'),
+    'help' => t('Year in the XML file.'),
+    'argument' => ['id' => 'views_xml_backend_date_year'],
+  ];
+
+  $data['views_xml_backend']['date_month'] = [
+    'title' => t('XML Month'),
+    'help' => t('Month in the XML file.'),
+    'argument' => ['id' => 'views_xml_backend_date_month'],
+  ];
+
+  $data['views_xml_backend']['date_day'] = [
+    'title' => t('XML Day'),
+    'help' => t('Day in the XML file.'),
+    'argument' => ['id' => 'views_xml_backend_date_day'],
+  ];
+
   $data['views_xml_backend']['markup'] = [
     'title' => t('HTML Markup'),
     'help' => t('HTML text in the XML file.'),

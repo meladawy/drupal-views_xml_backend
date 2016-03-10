@@ -456,6 +456,7 @@ class Xml extends QueryPluginBase {
     $this->registerNamespaces($xpath);
 
     $xpath->registerPhpFunctions('views_xml_backend_date');
+    $xpath->registerPhpFunctions('views_xml_backend_format_value');
 
     return $xpath;
   }

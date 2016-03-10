@@ -36,7 +36,7 @@ class Standard extends ArgumentPluginBase implements XmlArgumentInterface {
    */
   protected function defineOptions() {
     $options = parent::defineOptions();
-    $options['xpath_selector'] = ['default' => ''];
+    $options['xpath_selector']['default'] = '';
 
     return $options;
   }
