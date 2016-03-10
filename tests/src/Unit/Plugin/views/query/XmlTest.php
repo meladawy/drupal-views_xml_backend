@@ -121,6 +121,46 @@ XML;
     }
   }
 
+  public function testAddExtraFieldsWorks() {
+    $xml = <<<XML
+<foo>
+  <bar><value>1</value></bar>
+  <bar><value>2</value></bar>
+  <bar><value>3</value></bar>
+  <bar><value>4</value></bar>
+</foo>
+XML;
+    $mock = new MockHandler([
+        new Response(200, [], $xml),
+    ]);
+
+    $handler = HandlerStack::create($mock);
+    $this->client = new Client(['handler' => $handler]);
+
+    $query = $this->getNewQueryObject([
+      'xml_file' => 'http://example.com',
+      'row_xpath' => '/foo/bar',
+    ]);
+
+    $view = $this->getMockedView();
+
+    $query->addField('field_1', 'value');
+
+    $query->build($view);
+    $query->execute($view);
+
+    // Check for no errors.
+    $this->assertSame(0, count($this->messenger->getMessages()));
+
+    $this->assertSame(4, count($view->result));
+
+    foreach ($view->result as $index => $row) {
+      $this->assertSame($index, $row->index);
+      $value = (string) ($index + 1);
+      $this->assertSame([0 => $value], $row->field_1);
+    }
+  }
+
   protected function getNewQueryObject(array $options) {
     $query = new Xml(
       [],
