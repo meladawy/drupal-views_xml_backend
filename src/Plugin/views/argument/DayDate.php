@@ -7,6 +7,8 @@
 
 namespace Drupal\views_xml_backend\Plugin\views\argument;
 
+use Drupal\views_xml_backend\Xpath;
+
 /**
  * Argument handler for a day (DD).
  *
