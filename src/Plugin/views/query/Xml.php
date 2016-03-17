@@ -109,13 +109,6 @@ class Xml extends QueryPluginBase {
   protected $messenger;
 
   /**
-   * The current view.
-   *
-   * @var \Drupal\views\ViewExecutable
-   */
-  protected $view;
-
-  /**
    * Constructs an Xml object.
    *
    * @param array $configuration
