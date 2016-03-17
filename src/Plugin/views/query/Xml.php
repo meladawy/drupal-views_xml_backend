@@ -18,6 +18,7 @@ use Drupal\views_xml_backend\Messenger;
 use Drupal\views_xml_backend\MessengerInterface;
 use Drupal\views_xml_backend\Plugin\views\argument\XmlArgumentInterface;
 use Drupal\views_xml_backend\Plugin\views\filter\XmlFilterInterface;
+use Drupal\views_xml_backend\Xpath;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\RequestOptions;
@@ -106,6 +107,13 @@ class Xml extends QueryPluginBase {
    * @var \Drupal\views_xml_backend\MessengerInterface
    */
   protected $messenger;
+
+  /**
+   * The current view.
+   *
+   * @var \Drupal\views\ViewExecutable
+   */
+  protected $view;
 
   /**
    * Constructs an Xml object.
@@ -299,6 +307,49 @@ class Xml extends QueryPluginBase {
   }
 
   /**
+   * Adds a simple WHERE clause to the query.
+   *
+   * The caller is responsible for ensuring that all fields are fully qualified
+   * (TABLE.FIELD) and that the table already exists in the query.
+   *
+   * @param $group
+   *   The WHERE group to add these to; groups are used to create AND/OR
+   *   sections. Groups cannot be nested. Use 0 as the default group.
+   *   If the group does not yet exist it will be created as an AND group.
+   * @param $field
+   *   The name of the field to check.
+   * @param $value
+   *   The value to test the field against. In most cases, this is a scalar. For more
+   *   complex options, it is an array. The meaning of each element in the array is
+   *   dependent on the $operator.
+   * @param $operator
+   *   The comparison operator, such as =, <, or >=. It also accepts more
+   *   complex options such as IN, LIKE, LIKE BINARY, or BETWEEN. Defaults to =.
+   *   If $field is a string you have to use 'formula' here.
+   */
+  public function addWhere($group, $field, $value = NULL, $operator = NULL) {
+    if ($group && $operator === 'in') {
+      if (strpos($field, '.') !== FALSE) {
+        list(, $field) = explode('.', $field);
+      }
+
+      if (!isset($this->view->field[$field])) {
+        return;
+      }
+
+      $xpath = $this->view->field[$field]->options['xpath_selector'];
+
+      $values = [];
+      foreach ($value as $v) {
+        $v = Xpath::escapeXpathString($v);
+        $values[] = "$xpath = $v";
+      }
+
+      $this->filters[] = implode(' or ', $values);
+    }
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function query($get_count = FALSE) {
@@ -320,6 +371,7 @@ class Xml extends QueryPluginBase {
    * {@inheritdoc}
    */
   public function build(ViewExecutable $view) {
+    $this->view = $view;
     $view->initPager();
 
     // Let the pager modify the query to add limits.
