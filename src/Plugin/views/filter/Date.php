@@ -36,6 +36,7 @@ class Date extends ViewsDate implements XmlFilterInterface {
     $options = parent::defineOptions();
 
     $options['xpath_selector']['default'] = '';
+    $options['granularity']['default'] = 'second';
 
     return $options;
   }
@@ -63,6 +64,21 @@ class Date extends ViewsDate implements XmlFilterInterface {
       '#required' => TRUE,
     ];
 
+    $form['granularity'] = [
+      '#type' => 'radios',
+      '#title' => $this->t('Granularity'),
+      '#options' => [
+        'second' => $this->t('Second'),
+        'minute' => $this->t('Minute'),
+        'hour'   => $this->t('Hour'),
+        'day'    => $this->t('Day'),
+        'month'  => $this->t('Month'),
+        'year'   => $this->t('Year'),
+      ],
+      '#description' => $this->t('The granularity is the smallest unit to use when determining whether two dates are the same; for example, if the granularity is "Year" then all dates in 1999, regardless of when they fall in 1999, will be considered the same date.'),
+      '#default_value' => $this->options['granularity'],
+    ];
+
     parent::buildOptionsForm($form, $form_state);
   }
 
@@ -73,8 +89,8 @@ class Date extends ViewsDate implements XmlFilterInterface {
     $operator = $this->operator;
     $xpath = $this->options['xpath_selector'];
 
-    $min = views_xml_backend_date($this->value['min']);
-    $max = views_xml_backend_date($this->value['max']);
+    $min = views_xml_backend_date($this->value['min'], $this->options['granularity']);
+    $max = views_xml_backend_date($this->value['max'], $this->options['granularity']);
 
     if ($operator === 'between') {
       return "php:functionString('views_xml_backend_date', $xpath) >= $min and php:functionString('views_xml_backend_date', $xpath) <= $max";
@@ -84,7 +100,7 @@ class Date extends ViewsDate implements XmlFilterInterface {
       return "php:functionString('views_xml_backend_date', $xpath) <= $min and php:functionString('views_xml_backend_date', $xpath) >= $max";
     }
 
-    $value = views_xml_backend_date($this->value['value']);
+    $value = views_xml_backend_date($this->value['value'], $this->options['granularity']);
 
     return "php:functionString('views_xml_backend_date', $xpath) $operator $value";
   }
