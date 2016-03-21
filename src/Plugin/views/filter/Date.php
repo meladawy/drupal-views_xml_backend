@@ -88,21 +88,22 @@ class Date extends ViewsDate implements XmlFilterInterface {
   public function __toString() {
     $operator = $this->operator;
     $xpath = $this->options['xpath_selector'];
+    $granularity = $this->options['granularity'];
 
-    $min = views_xml_backend_date($this->value['min'], $this->options['granularity']);
-    $max = views_xml_backend_date($this->value['max'], $this->options['granularity']);
+    $min = views_xml_backend_date($this->value['min'], $granularity);
+    $max = views_xml_backend_date($this->value['max'], $granularity);
 
     if ($operator === 'between') {
-      return "php:functionString('views_xml_backend_date', $xpath) >= $min and php:functionString('views_xml_backend_date', $xpath) <= $max";
+      return "php:functionString('views_xml_backend_date', $xpath, '$granularity') >= $min and php:functionString('views_xml_backend_date', $xpath, '$granularity') <= $max";
     }
 
     if ($operator === 'not between') {
-      return "php:functionString('views_xml_backend_date', $xpath) <= $min and php:functionString('views_xml_backend_date', $xpath) >= $max";
+      return "php:functionString('views_xml_backend_date', $xpath, '$granularity') <= $min and php:functionString('views_xml_backend_date', $xpath, '$granularity') >= $max";
     }
 
-    $value = views_xml_backend_date($this->value['value'], $this->options['granularity']);
+    $value = views_xml_backend_date($this->value['value'], $granularity);
 
-    return "php:functionString('views_xml_backend_date', $xpath) $operator $value";
+    return "php:functionString('views_xml_backend_date', $xpath, '$granularity') $operator $value";
   }
 
 }
