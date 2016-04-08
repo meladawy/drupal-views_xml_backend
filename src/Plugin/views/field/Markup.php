@@ -8,6 +8,7 @@
 namespace Drupal\views_xml_backend\Plugin\views\field;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -39,10 +40,11 @@ class Markup extends Standard {
    * @param \Drupal\Core\Session\AccountProxyInterface $current_user
    *   The current user.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, AccountProxyInterface $current_user) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, AccountProxyInterface $current_user, RendererInterface $renderer) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
 
     $this->currentUser = $current_user;
+    $this->renderer = $renderer;
   }
 
   /**
@@ -53,7 +55,8 @@ class Markup extends Standard {
       $configuration,
       $plugin_id,
       $plugin_definition,
-      $container->get('current_user')
+      $container->get('current_user'),
+      $container->get('renderer')
     );
   }
 
@@ -73,6 +76,7 @@ class Markup extends Standard {
   public function buildOptionsForm(&$form, FormStateInterface $form_state) {
     parent::buildOptionsForm($form, $form_state);
 
+    $options = [];
     foreach (filter_formats($this->currentUser) as $id => $format) {
       $options[$id] = $format->get('name');
     }
@@ -93,13 +97,15 @@ class Markup extends Standard {
   public function render_item($count, $item) {
     $text = str_replace('<!--break-->', '', $item['value']);
 
-    return [
+    $build = [
       '#type' => 'processed_text',
       '#text' => $text,
       '#format' => $this->options['format'],
       '#filter_types_to_skip' => [],
       '#langcode' => '',
     ];
+
+    return $this->renderer->renderPlain($build);
   }
 
 }

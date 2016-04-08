@@ -7,11 +7,13 @@
 
 namespace Drupal\Tests\views_xml_backend\Unit\Plugin\views\field;
 
+use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Tests\views_xml_backend\Unit\ViewsXmlBackendTestBase;
 use Drupal\views\Plugin\views\display\DisplayPluginBase;
 use Drupal\views\ViewExecutable;
 use Drupal\views_xml_backend\Plugin\views\field\Markup;
+use Prophecy\Argument;
 
 /**
  * @coversDefaultClass \Drupal\views_xml_backend\Plugin\views\field\Markup
@@ -24,17 +26,18 @@ class MarkupTest extends ViewsXmlBackendTestBase {
    */
   public function testRenderItem() {
     $account = $this->prophesize(AccountProxyInterface::class);
+    $renderer = $this->prophesize(RendererInterface::class);
+    $renderer->renderPlain(Argument::type('array'))->will(function (array $args) {
+      return $args[0]['#text'];
+    });
 
-    $plugin = new Markup([], '', [], $account->reveal());
+    $plugin = new Markup([], '', [], $account->reveal(), $renderer->reveal());
 
     $options = ['format' => 'my_format'];
 
     $plugin->init($this->getMockedView(), $this->getMockedDisplay(), $options);
 
-    $result = $plugin->render_item(0, ['value' => 'foo']);
-
-    $this->assertSame('foo', $result['#text']);
-    $this->assertSame('my_format', $result['#format']);
+    $this->assertSame('foo', $plugin->render_item(0, ['value' => 'foo']));
   }
 
 }
