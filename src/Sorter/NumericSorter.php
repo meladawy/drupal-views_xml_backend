@@ -21,14 +21,26 @@ class NumericSorter extends StringSorter {
     // Notice the order of the subtraction.
     switch ($this->direction) {
       case 'ASC':
-        uasort($result, function (ResultRow $a, ResultRow $b) {
-          return reset($a->{$this->field}) - reset($b->{$this->field});
+        usort($result, function (ResultRow $a, ResultRow $b) {
+          $compare = reset($a->{$this->field}) - reset($b->{$this->field});
+
+          if ($compare === 0) {
+            return $a->index < $b->index ? -1 : 1;
+          }
+
+          return $compare;
         });
         break;
 
       case 'DESC':
-        uasort($result, function (ResultRow $a, ResultRow $b) {
-          return reset($b->{$this->field}) - reset($a->{$this->field});
+        usort($result, function (ResultRow $a, ResultRow $b) {
+          $compare = reset($b->{$this->field}) - reset($a->{$this->field});
+
+          if ($compare === 0) {
+            return $a->index < $b->index ? -1 : 1;
+          }
+
+          return $compare;
         });
         break;
     }

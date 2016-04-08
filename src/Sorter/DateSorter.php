@@ -21,20 +21,32 @@ class DateSorter extends StringSorter {
     // Notice the order of the subtraction.
     switch ($this->direction) {
       case 'ASC':
-        uasort($result, function (ResultRow $a, ResultRow $b) {
+        usort($result, function (ResultRow $a, ResultRow $b) {
           $a_value = $this->convertToUnixTimestamp(reset($a->{$this->field}));
           $b_value = $this->convertToUnixTimestamp(reset($b->{$this->field}));
 
-          return $a_value - $b_value;
+          $compare = $a_value - $b_value;
+
+          if ($compare === 0) {
+            return $a->index < $b->index ? -1 : 1;
+          }
+
+          return $compare;
         });
         break;
 
       case 'DESC':
-        uasort($result, function (ResultRow $a, ResultRow $b) {
+        usort($result, function (ResultRow $a, ResultRow $b) {
           $a_value = $this->convertToUnixTimestamp(reset($a->{$this->field}));
           $b_value = $this->convertToUnixTimestamp(reset($b->{$this->field}));
 
-          return $b_value - $a_value;
+          $compare = $b_value - $a_value;
+
+          if ($compare === 0) {
+            return $a->index < $b->index ? -1 : 1;
+          }
+
+          return $compare;
         });
         break;
     }

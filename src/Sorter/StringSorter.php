@@ -48,14 +48,26 @@ class StringSorter implements SorterInterface {
     // Notice the order of the arguments to strcasecmp().
     switch ($this->direction) {
       case 'ASC':
-        uasort($result, function (ResultRow $a, ResultRow $b) {
-          return strcasecmp(reset($a->{$this->field}), reset($b->{$this->field}));
+        usort($result, function (ResultRow $a, ResultRow $b) {
+          $compare = strcasecmp(reset($a->{$this->field}), reset($b->{$this->field}));
+
+          if ($compare === 0) {
+            return $a->index < $b->index ? -1 : 1;
+          }
+
+          return $compare;
         });
         break;
 
       case 'DESC':
-        uasort($result, function (ResultRow $a, ResultRow $b) {
-          return strcasecmp(reset($b->{$this->field}), reset($a->{$this->field}));
+        usort($result, function (ResultRow $a, ResultRow $b) {
+          $compare = strcasecmp(reset($b->{$this->field}), reset($a->{$this->field}));
+
+          if ($compare === 0) {
+            return $a->index < $b->index ? -1 : 1;
+          }
+
+          return $compare;
         });
         break;
     }

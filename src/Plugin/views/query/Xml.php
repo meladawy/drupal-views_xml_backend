@@ -433,6 +433,10 @@ class Xml extends QueryPluginBase {
       $view->result[] = $result_row;
 
       foreach ($view->field as $field_name => $field) {
+        if (!isset($field->options['xpath_selector']) || $field->options['xpath_selector'] === '') {
+          continue;
+        }
+
         $result_row->$field_name = $this->executeRowQuery($xpath, $field->options['xpath_selector'], $row);
       }
 
@@ -450,10 +454,7 @@ class Xml extends QueryPluginBase {
     }
 
     // Set the index values after all manipulation is done.
-    $index = 0;
-    foreach ($view->result as $row) {
-      $row->index = $index++;
-    }
+    $this->reIndexResults($view);
 
     $view->pager->postExecute($view->result);
     $view->pager->updatePageInfo();
@@ -774,7 +775,24 @@ class Xml extends QueryPluginBase {
    */
   protected function executeSorts(ViewExecutable $view) {
     foreach (array_reverse($this->orderby) as $sort) {
+      // We need to re-index the results before each sort because the index is
+      // used to maintain a stable sort.
+      $this->reIndexResults($view);
+
       $sort($view->result);
+    }
+  }
+
+  /**
+   * Re-indexes the results of a view.
+   *
+   * @param \Drupal\views\ViewExecutable $view
+   *   The view to re-index.
+   */
+  protected function reIndexResults(ViewExecutable $view) {
+    $index = 0;
+    foreach ($view->result as $row) {
+      $row->index = $index++;
     }
   }
 
