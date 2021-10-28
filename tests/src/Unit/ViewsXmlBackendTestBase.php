@@ -1,12 +1,8 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Tests\views_xml_backend\Unit\ViewsXmlBackendTestBase.
- */
-
 namespace Drupal\Tests\views_xml_backend\Unit;
 
+use Prophecy\PhpUnit\ProphecyTrait;
 use Drupal\Tests\UnitTestCase;
 use Drupal\views\Plugin\views\display\DisplayPluginBase;
 use Drupal\views\Plugin\views\pager\None;
@@ -18,11 +14,15 @@ use Drupal\views\ViewExecutable;
  */
 abstract class ViewsXmlBackendTestBase extends UnitTestCase {
 
+  use ProphecyTrait;
   protected $display;
 
   protected $view;
 
-  public function setUp() {
+  /**
+   *
+   */
+  public function setUp(): void {
     parent::setUp();
 
     if (!defined('REQUEST_TIME')) {
@@ -32,6 +32,9 @@ abstract class ViewsXmlBackendTestBase extends UnitTestCase {
     require_once dirname(dirname(dirname(__DIR__))) . '/views_xml_backend.module';
   }
 
+  /**
+   *
+   */
   protected function getMockedView() {
     if (isset($this->view)) {
       return $this->view->reveal();
@@ -49,6 +52,9 @@ abstract class ViewsXmlBackendTestBase extends UnitTestCase {
     return $this->view->reveal();
   }
 
+  /**
+   *
+   */
   protected function getMockedDisplay() {
     if (isset($this->display)) {
       return $this->display->reveal();

@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\views_xml_backend\Plugin\views\argument\Date.
- */
-
 namespace Drupal\views_xml_backend\Plugin\views\argument;
 
 use Drupal\Core\Form\FormStateInterface;
@@ -35,7 +30,7 @@ class Date extends ViewsDate implements XmlArgumentInterface {
 
   /**
    * {@inheritdoc}
-    */
+   */
   public function buildOptionsForm(&$form, FormStateInterface $form_state) {
     $form['xpath_selector'] = [
       '#type' => 'textfield',

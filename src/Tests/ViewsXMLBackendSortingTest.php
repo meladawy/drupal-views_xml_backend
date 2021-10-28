@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\views_xml_backend\Tests\ViewsXMLBackendSortingTest.
- */
-
 namespace Drupal\views_xml_backend\Tests;
 
 /**
@@ -12,7 +7,6 @@ namespace Drupal\views_xml_backend\Tests;
  *
  * @group views_xml_backend
  */
-
 class ViewsXMLBackendSortingTest extends ViewsXMLBackendBase {
 
   /**
@@ -20,15 +14,19 @@ class ViewsXMLBackendSortingTest extends ViewsXMLBackendBase {
    */
   public function testSortingViewsXMLBackend() {
     $this->addStandardXMLBackendView();
+    $this->drupalGet("admin/structure/views/nojs/add-handler/{$this->viewsXMLBackendViewId}/default/sort");
 
-    // Check add sorting ability
-    $this->drupalPostForm("admin/structure/views/nojs/add-handler/{$this->viewsXMLBackendViewId}/default/sort", array('name[views_xml_backend.text]' => 'views_xml_backend.text'), t('Add and configure @handler', array('@handler' => t('sort criteria'))));
-    $this->assertField('options[xpath_selector]', "The XML input 'options[xpath_selector]' was found");
+    // Check add sorting ability.
+    $this->submitForm(['name[views_xml_backend.text]' => 'views_xml_backend.text'], t('Add and configure @handler', ['@handler' => t('sort criteria')]));
+    // @todo Drupal Rector Notice: Please delete the following comment after you've made any necessary changes.
+    // Change assertion to buttonExists() if checking for a button.
+    $this->assertSession()->fieldExists('options[xpath_selector]', "The XML input 'options[xpath_selector]' was found");
     $fields = [
       'options[xpath_selector]' => 'download_link',
       'options[order]' => 'DESC',
     ];
-    $this->drupalPostForm(NULL, $fields, t('Apply'));
+    $this->drupalGet(NULL);
+    $this->submitForm($fields, t('Apply'));
 
     $this->drupalGet("admin/structure/views/nojs/handler/{$this->viewsXMLBackendViewId}/default/sort/text");
     $this->assertFieldByXPath("//input[@id='edit-options-xpath-selector']", 'download_link', "Value 'download_link' found in field 'edit-options-xpath-selector'");

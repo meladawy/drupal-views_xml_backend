@@ -1,12 +1,8 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Tests\views_xml_backend\Unit\Plugin\views\sort\StandardTest.
- */
-
 namespace Drupal\Tests\views_xml_backend\Unit\Plugin\views\sort;
 
+use Prophecy\PhpUnit\ProphecyTrait;
 use Drupal\Tests\views_xml_backend\Unit\ViewsXmlBackendTestBase;
 use Drupal\views_xml_backend\Plugin\views\query\Xml;
 use Drupal\views_xml_backend\Plugin\views\sort\Standard;
@@ -19,8 +15,11 @@ use Prophecy\Argument;
  */
 class StandardTest extends ViewsXmlBackendTestBase {
 
+  use ProphecyTrait;
+
   /**
    * @covers ::query
+   * @doesNotPerformAssertions
    */
   public function testRenderItem() {
     $plugin = new Standard([], '', []);

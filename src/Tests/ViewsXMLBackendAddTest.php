@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\views_xml_backend\Tests\ViewsXMLBackendAddTest.
- */
-
 namespace Drupal\views_xml_backend\Tests;
 
 /**
@@ -12,7 +7,6 @@ namespace Drupal\views_xml_backend\Tests;
  *
  * @group views_xml_backend
  */
-
 class ViewsXMLBackendAddTest extends ViewsXMLBackendBase {
 
   /**

@@ -1,13 +1,7 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Tests\views_xml_backend\Unit\XpathTest
- */
-
 namespace Drupal\Tests\views_xml_backend\Unit;
 
-use Drupal\Tests\views_xml_backend\Unit\ViewsXmlBackendTestBase;
 use Drupal\views_xml_backend\Xpath;
 
 /**

@@ -10,6 +10,9 @@ use Drupal\views_xml_backend\Sorter\DateSorter;
  */
 class DateSorterTest extends StringSorterTest {
 
+  /**
+   *
+   */
   protected function getSorter($field, $direction) {
     return new DateSorter($field, $direction);
   }

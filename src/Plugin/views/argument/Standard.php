@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\views_xml_backend\Plugin\views\argument\Standard.
- */
-
 namespace Drupal\views_xml_backend\Plugin\views\argument;
 
 use Drupal\Core\Form\FormStateInterface;
@@ -27,7 +22,7 @@ class Standard extends ArgumentPluginBase implements XmlArgumentInterface {
    * {@inheritdoc}
    */
   public function query($group_by = FALSE) {
-    // @todo: Handle group_by argument.
+    // @todo Handle group_by argument.
     $this->query->addArgument($this);
   }
 

@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Tests\views_xml_backend\Unit\Plugin\views\argument\NumericTest.
- */
-
 namespace Drupal\Tests\views_xml_backend\Unit\Plugin\views\argument;
 
 use Drupal\Tests\views_xml_backend\Unit\ViewsXmlBackendTestBase;

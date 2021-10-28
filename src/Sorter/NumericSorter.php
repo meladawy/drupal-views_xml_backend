@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\views_xml_backend\Sorter\NumericSorter.
- */
-
 namespace Drupal\views_xml_backend\Sorter;
 
 use Drupal\views\ResultRow;

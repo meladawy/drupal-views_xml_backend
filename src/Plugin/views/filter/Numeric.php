@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\views_xml_backend\Plugin\views\filter\Numeric.
- */
-
 namespace Drupal\views_xml_backend\Plugin\views\filter;
 
 use Drupal\Core\Form\FormStateInterface;

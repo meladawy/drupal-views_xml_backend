@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\views_xml_backendAdminLabelTrait.
- */
-
 namespace Drupal\views_xml_backend;
 
 /**

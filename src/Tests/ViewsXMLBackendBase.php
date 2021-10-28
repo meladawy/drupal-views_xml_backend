@@ -1,20 +1,14 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\views_xml_backend\Tests\ViewsXMLBackendBase.
- */
-
 namespace Drupal\views_xml_backend\Tests;
 
 use Drupal\views\Views;
-use Drupal\views_ui\Tests\UITestBase;
+use Drupal\Tests\views_ui\Functional\UITestBase;
 use Drupal\Component\Serialization\Json;
 
 /**
  * Provides supporting functions for testing the Views XML Backend module.
  */
-
 abstract class ViewsXMLBackendBase extends UITestBase {
 
   protected $strictConfigSchema = FALSE;
@@ -103,8 +97,8 @@ abstract class ViewsXMLBackendBase extends UITestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
-    parent::setUp();
+  protected function setUp($import_test_views = TRUE) {
+    parent::setUp($import_test_views);
     $permissions = [
       'administer users',
       'administer permissions',
@@ -161,7 +155,7 @@ abstract class ViewsXMLBackendBase extends UITestBase {
     $this->viewsXMLBackendViewAddPath = '/admin/structure/views/add';
     $this->viewsXMLBackendViewEditPath = "/admin/structure/views/view/{$this->viewsXMLBackendViewId}/edit/default";
     $this->viewsXMLBackendViewQueryPath = "admin/structure/views/nojs/display/{$this->viewsXMLBackendViewId}/default/query";
-    //$path_to_test_file = drupal_get_path('module', "views_xml_backend");
+    // $path_to_test_file = drupal_get_path('module', "views_xml_backend");
   }
 
   /**
@@ -191,7 +185,7 @@ abstract class ViewsXMLBackendBase extends UITestBase {
     ];
     $this->drupalPostAjaxForm($this->viewsXMLBackendViewAddPath, $default, $this->viewsXMLBackendViewFieldName);
 
-    // Confirm standard:views_xml_backend was selected in show[wizard_key] select
+    // Confirm standard:views_xml_backend was selected in show[wizard_key] select.
     $new_id = $this->xpath("//*[starts-with(@id, 'edit-show-wizard-key')]/@id");
     $new_wizard_id = (string) $new_id[0]['id'];
     $this->assertOptionSelected($new_wizard_id, $this->viewsXMLBackendViewValue, "The XML select option 'standard:views_xml_backend' was selected on {$new_wizard_id}");
@@ -215,17 +209,17 @@ abstract class ViewsXMLBackendBase extends UITestBase {
   protected function addStandardXMLBackendView() {
     $this->addMinimalXMLBackendView();
 
-    // Update the Query Settings
+    // Update the Query Settings.
     $this->drupalGet($this->viewsXMLBackendViewQueryPath);
     $this->assertField('query[options][xml_file]', "The XML select option 'query[options][xml_file]' was found");
     $this->assertField('query[options][row_xpath]', "The XML select option 'query[options][row_xpath]' was found");
     // Update the Query settings on the new View to use an XML file as source.
     $xml_setting = [
       'query[options][xml_file]' => $this->viewsXMLBackendFile,
-      'query[options][row_xpath]' => "/project/releases/release"
+      'query[options][row_xpath]' => "/project/releases/release",
     ];
     $this->drupalPostForm($this->viewsXMLBackendViewQueryPath, $xml_setting, t('Apply'));
-    $this->drupalPostForm($this->viewsXMLBackendViewEditPath, array(), t('Save'));
+    $this->drupalPostForm($this->viewsXMLBackendViewEditPath, [], t('Save'));
 
     // Check that the Query Settings are saved into the view itself.
     $view = Views::getView($this->viewsXMLBackendViewId);
@@ -236,15 +230,15 @@ abstract class ViewsXMLBackendBase extends UITestBase {
     // Update and confirm the default XML field on the new View.
     $this->drupalGet("admin/structure/views/view/{$this->viewsXMLBackendViewId}/edit");
     $this->assertResponse(200);
-    $this->drupalPostForm(NULL, $edit = array(), t('Update preview'));
+    $this->drupalPostForm(NULL, $edit = [], t('Update preview'));
 
     $edit_handler_url = "admin/structure/views/nojs/handler/{$this->viewsXMLBackendViewId}/default/field/text";
     $this->drupalGet($edit_handler_url);
     $fields = [
-      'options[xpath_selector]' => 'version_major'
+      'options[xpath_selector]' => 'version_major',
     ];
     $this->drupalPostForm(NULL, $fields, t('Apply'));
-    $this->drupalPostForm(NULL, $edit = array(), t('Update preview'));
+    $this->drupalPostForm(NULL, $edit = [], t('Update preview'));
 
     $edit_handler_url = "admin/structure/views/nojs/handler/{$this->viewsXMLBackendViewId}/default/field/text";
     $this->drupalGet($edit_handler_url);
@@ -263,10 +257,10 @@ abstract class ViewsXMLBackendBase extends UITestBase {
 
     $this->assertField('options[xpath_selector]', "The XML input 'options[xpath_selector]' was found");
     $fields = [
-      'options[xpath_selector]' => 'download_link'
+      'options[xpath_selector]' => 'download_link',
     ];
     $this->drupalPostForm(NULL, $fields, t('Apply'));
-    $this->drupalPostForm(NULL, $edit = array(), t('Update preview'));
+    $this->drupalPostForm(NULL, $edit = [], t('Update preview'));
 
     $edit_handler_url = "admin/structure/views/nojs/handler/{$this->viewsXMLBackendViewId}/default/field/text_1";
     $this->drupalGet($edit_handler_url);
@@ -281,12 +275,12 @@ abstract class ViewsXMLBackendBase extends UITestBase {
   protected function navigateViewsPager($pager_path) {
     $content = $this->content;
     $drupal_settings = $this->drupalSettings;
-    $ajax_settings = array(
+    $ajax_settings = [
       'wrapper' => 'views-preview-wrapper',
       'method' => 'replaceWith',
-    );
+    ];
     $url = $this->getAbsoluteUrl($pager_path);
-    $post = array('js' => 'true') + $this->getAjaxPageStatePostData();
+    $post = ['js' => 'true'] + $this->getAjaxPageStatePostData();
     $result = Json::decode($this->drupalPost($url, 'application/vnd.drupal-ajax', $post));
     if (!empty($result)) {
       $this->drupalProcessAjaxResponse($content, $result, $ajax_settings, $drupal_settings);

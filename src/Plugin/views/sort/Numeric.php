@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\views_xml_backend\Plugin\views\sort\Numeric.
- */
-
 namespace Drupal\views_xml_backend\Plugin\views\sort;
 
 use Drupal\views_xml_backend\Sorter\NumericSorter;

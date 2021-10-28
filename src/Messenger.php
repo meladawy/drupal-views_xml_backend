@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\views_xml_backend\Messenger.
- */
-
 namespace Drupal\views_xml_backend;
 
 /**
@@ -16,7 +11,7 @@ class Messenger implements MessengerInterface {
    * {@inheritdoc}
    */
   public function setMessage($message = NULL, $type = 'status', $repeat = FALSE) {
-    drupal_set_message($message, $type, $repeat);
+    \Drupal::messenger()->addMessage($message, $type, $repeat);
   }
 
 }

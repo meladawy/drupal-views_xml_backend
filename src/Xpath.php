@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\views_xml_backend\Xpath.
- */
-
 namespace Drupal\views_xml_backend;
 
 /**
@@ -21,7 +16,7 @@ class Xpath {
    * @return string
    *   The escaped string.
    */
-  static public function escapeXpathString($argument) {
+  public static function escapeXpathString($argument) {
     if (strpos($argument, "'") === FALSE) {
       return "'" . $argument . "'";
     }

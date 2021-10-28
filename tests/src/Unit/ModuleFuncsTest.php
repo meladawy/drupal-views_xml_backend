@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Tests\views_xml_backend\Unit\ViewsXmlBackendTestBase.
- */
-
 namespace Drupal\Tests\views_xml_backend\Unit;
 
 /**

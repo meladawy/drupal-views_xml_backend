@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\views_xml_backend\Plugin\views\field\Standard.
- */
-
 namespace Drupal\views_xml_backend\Plugin\views\field;
 
 use Drupal\Core\Form\FormStateInterface;

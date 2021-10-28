@@ -1,12 +1,8 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\views_xml_backend\Plugin\views\query\Xml.
- */
-
 namespace Drupal\views_xml_backend\Plugin\views\query;
 
+use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Site\Settings;
@@ -83,7 +79,7 @@ class Xml extends QueryPluginBase {
   /**
    * The applied filters.
    *
-   * @var XmlFilterInterface[]
+   * @var \Drupal\views_xml_backend\Plugin\views\filter\XmlFilterInterface[]
    */
   protected $filters = [];
 
@@ -226,7 +222,6 @@ class Xml extends QueryPluginBase {
   public function ensureTable($table, $relationship = NULL, JoinPluginBase $join = NULL) {
     return $table;
   }
-
 
   /**
    * Adds an argument.
@@ -413,7 +408,7 @@ class Xml extends QueryPluginBase {
   /**
    * Performs the actual view execution.
    *
-   * @param ViewExecutable $view
+   * @param \Drupal\views\ViewExecutable $view
    *   The view to execute.
    *
    * @see Xml::execute()
@@ -624,7 +619,7 @@ class Xml extends QueryPluginBase {
   protected function fetchRemoteFile($uri) {
     $destination = Settings::get('views_xml_backend_cache_directory', static::DEFAULT_CACHE_DIR);
 
-    if (!file_prepare_directory($destination, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS)) {
+    if (!\Drupal::service('file_system')->prepareDirectory($destination, FileSystemInterface::CREATE_DIRECTORY | FileSystemInterface::MODIFY_PERMISSIONS)) {
       if ($this->livePreview) {
         $this->messenger->setMessage($this->t('File cache directory either cannot be created or is not writable.'), 'error');
       }
@@ -668,7 +663,7 @@ class Xml extends QueryPluginBase {
 
     $data = trim($response->getBody());
 
-    file_unmanaged_save_data($data, $cache_file, FILE_EXISTS_REPLACE);
+    \Drupal::service('file_system')->saveData($data, $cache_file, FileSystemInterface::EXISTS_REPLACE);
     $this->cacheBackend->set($cache_key, array_change_key_case($response->getHeaders()));
 
     return $data;
@@ -733,7 +728,7 @@ class Xml extends QueryPluginBase {
       return;
     }
 
-    $limit  = intval(!empty($this->limit) ? $this->limit : 999999);
+    $limit = intval(!empty($this->limit) ? $this->limit : 999999);
     $offset = intval(!empty($this->offset) ? $this->offset : 0);
     $limit += $offset;
     $view->build_info['query'] .= "[position() > $offset and not(position() > $limit)]";

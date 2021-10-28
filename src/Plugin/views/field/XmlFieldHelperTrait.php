@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\views_xml_backend\Plugin\views\field\XmlFieldHelperTrait.
- */
-
 namespace Drupal\views_xml_backend\Plugin\views\field;
 
 use Drupal\Core\Form\FormStateInterface;
@@ -116,14 +111,14 @@ trait XmlFieldHelperTrait {
         ];
       }
       else {
-        $render = array(
+        $render = [
           '#theme' => 'item_list',
           '#items' => $items,
           '#title' => NULL,
           '#list_type' => $this->options['type'],
-        );
+        ];
       }
-      return drupal_render($render);
+      return \Drupal::service('renderer')->render($render);
     }
   }
 

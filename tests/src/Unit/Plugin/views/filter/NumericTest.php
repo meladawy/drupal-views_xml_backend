@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Tests\views_xml_backend\Unit\Plugin\views\filter\NumericTest.
- */
-
 namespace Drupal\Tests\views_xml_backend\Unit\Plugin\views\filter;
 
 use Drupal\Tests\views_xml_backend\Unit\ViewsXmlBackendTestBase;

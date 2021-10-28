@@ -10,6 +10,9 @@ use Drupal\views_xml_backend\Sorter\NumericSorter;
  */
 class NumericSorterTest extends StringSorterTest {
 
+  /**
+   *
+   */
   protected function getSorter($field, $direction) {
     return new NumericSorter($field, $direction);
   }

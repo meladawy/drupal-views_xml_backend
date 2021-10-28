@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\views_xml_backend\Plugin\views\argument\YearDate.
- */
-
 namespace Drupal\views_xml_backend\Plugin\views\argument;
 
 use Drupal\views_xml_backend\Xpath;

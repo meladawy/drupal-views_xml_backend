@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\views_xml_backend\Plugin\views\argument\DayDate.
- */
-
 namespace Drupal\views_xml_backend\Plugin\views\argument;
 
 use Drupal\views_xml_backend\Xpath;
@@ -31,8 +26,8 @@ class DayDate extends Date {
    */
   public function summaryName($data) {
     $day = str_pad($data->{$this->name_alias}, 2, '0', STR_PAD_LEFT);
-    // strtotime respects server timezone, so we need to set the time fixed as utc time
-    return format_date(strtotime("2005" . "05" . $day . " 00:00:00 UTC"), 'custom', $this->format, 'UTC');
+    // Strtotime respects server timezone, so we need to set the time fixed as utc time.
+    return \Drupal::service('date.formatter')->format(strtotime("2005" . "05" . $day . " 00:00:00 UTC"), 'custom', $this->format, 'UTC');
   }
 
   /**
@@ -40,7 +35,7 @@ class DayDate extends Date {
    */
   public function title() {
     $day = str_pad($this->argument, 2, '0', STR_PAD_LEFT);
-    return format_date(strtotime("2005" . "05" . $day . " 00:00:00 UTC"), 'custom', $this->format, 'UTC');
+    return \Drupal::service('date.formatter')->format(strtotime("2005" . "05" . $day . " 00:00:00 UTC"), 'custom', $this->format, 'UTC');
   }
 
   /**

@@ -12,6 +12,9 @@ use Drupal\views_xml_backend\Sorter\StringSorter;
  */
 class StringSorterTest extends ViewsXmlBackendTestBase {
 
+  /**
+   *
+   */
   public function testAsc() {
     $sorter = $this->getSorter('field', 'ASC');
 
@@ -35,6 +38,9 @@ class StringSorterTest extends ViewsXmlBackendTestBase {
     }
   }
 
+  /**
+   *
+   */
   public function testDesc() {
     $sorter = $this->getSorter('field', 'DESC');
 
@@ -58,6 +64,9 @@ class StringSorterTest extends ViewsXmlBackendTestBase {
     }
   }
 
+  /**
+   *
+   */
   protected function getSorter($field, $direction) {
     return new StringSorter($field, $direction);
   }

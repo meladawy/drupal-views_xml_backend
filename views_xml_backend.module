@@ -27,7 +27,7 @@ function views_xml_backend_cron() {
       continue;
     }
 
-    if ($mtime < REQUEST_TIME - $expiration) {
+    if ($mtime < \Drupal::time()->getRequestTime() - $expiration) {
       $file_system->unlink($file->uri);
     }
   }

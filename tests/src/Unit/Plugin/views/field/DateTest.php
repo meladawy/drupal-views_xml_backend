@@ -1,17 +1,11 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Tests\views_xml_backend\Unit\Plugin\views\field\DateTest.
- */
-
 namespace Drupal\Tests\views_xml_backend\Unit\Plugin\views\field;
 
+use Prophecy\PhpUnit\ProphecyTrait;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Tests\views_xml_backend\Unit\ViewsXmlBackendTestBase;
-use Drupal\views\Plugin\views\display\DisplayPluginBase;
-use Drupal\views\ViewExecutable;
 use Drupal\views_xml_backend\Plugin\views\field\Date;
 
 /**
@@ -19,6 +13,8 @@ use Drupal\views_xml_backend\Plugin\views\field\Date;
  * @group views_xml_backend
  */
 class DateTest extends ViewsXmlBackendTestBase {
+
+  use ProphecyTrait;
 
   /**
    * @covers ::render_item

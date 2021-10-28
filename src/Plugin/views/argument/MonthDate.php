@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\views_xml_backend\Plugin\views\argument\MonthDate.
- */
-
 namespace Drupal\views_xml_backend\Plugin\views\argument;
 
 use Drupal\views_xml_backend\Xpath;
@@ -31,7 +26,7 @@ class MonthDate extends Date {
    */
   public function summaryName($data) {
     $month = str_pad($data->{$this->name_alias}, 2, '0', STR_PAD_LEFT);
-    return format_date(strtotime("2005" . $month . "15" . " 00:00:00 UTC" ), 'custom', $this->format, 'UTC');
+    return \Drupal::service('date.formatter')->format(strtotime("2005" . $month . "15" . " 00:00:00 UTC"), 'custom', $this->format, 'UTC');
   }
 
   /**
@@ -39,7 +34,7 @@ class MonthDate extends Date {
    */
   public function title() {
     $month = str_pad($this->argument, 2, '0', STR_PAD_LEFT);
-    return format_date(strtotime("2005" . $month . "15" . " 00:00:00 UTC"), 'custom', $this->format, 'UTC');
+    return \Drupal::service('date.formatter')->format(strtotime("2005" . $month . "15" . " 00:00:00 UTC"), 'custom', $this->format, 'UTC');
   }
 
   /**
