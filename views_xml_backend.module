@@ -22,7 +22,7 @@ function views_xml_backend_cron() {
   }
 
   // Cache files are sha256 hashes without an extension.
-  foreach (file_scan_directory($directory, '/^[a-z0-9]+$/') as $file) {
+  foreach ($file_system->scanDirectory($directory, '/^[a-z0-9]+$/') as $file) {
     if (!$mtime = filemtime($file->uri)) {
       continue;
     }
